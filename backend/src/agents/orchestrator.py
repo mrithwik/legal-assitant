@@ -129,6 +129,10 @@ async def run_pipeline(
         # reducing total latency to max(extraction_time, rag_time) instead of
         # their sum. DB updates are done sequentially after both complete to
         # avoid concurrent access on the shared AsyncSession.
+        feature/parallel-rag
+
+
+        main
         # Register both steps in DB before parallel work begins
         extraction_step = await _start_step(db, case, "extraction", 0)
         rag_step = await _start_step(db, case, "rag_retrieval", 1)
