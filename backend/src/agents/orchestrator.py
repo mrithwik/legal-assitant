@@ -18,6 +18,7 @@ import asyncio
 import json
 import uuid
 from collections.abc import AsyncGenerator
+from typing import Any
 
 from openai import APIConnectionError, APITimeoutError, RateLimitError
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -123,34 +124,53 @@ async def run_pipeline(
     logger.info("pipeline_start", case_id=case_id, user_id=user_id, title=request.title)
 
     try:
-        # Step 0 -- Extraction
-        step = await _start_step(db, case, "extraction", 0)
-        try:
-            extraction = await asyncio.wait_for(
+        # Steps 0 & 1 -- Extraction + RAG run in parallel.
+        # Both only need raw_case_text so they are completely independent.
+        # We register both DB steps first (sequential — AsyncSession is not
+        # concurrency-safe), then race the LLM work with asyncio.gather(),
+        # then write results back to DB sequentially once both are done.
+        extraction_step = await _start_step(db, case, "extraction", 0)
+        rag_step = await _start_step(db, case, "rag_retrieval", 1)
+
+        # return_exceptions=True means a failure in one coroutine is returned
+        # as the result value rather than immediately cancelling the other.
+        # asyncio.gather() with return_exceptions=True types its return value
+        # as Sequence[object], which mypy can't narrow further — Any lets us
+        # work with the results normally; isinstance() guards at runtime.
+        gather_results: tuple[Any, Any] = await asyncio.gather(
+            asyncio.wait_for(
                 _run_with_retry(run_extraction_agent, request.raw_case_text),
                 timeout=settings.agent_step_timeout_seconds,
-            )
-        except Exception:
-            await _fail_step(db, step)
-            raise
-        await _finish_step(db, step, extraction.model_dump())
-        logger.info("step_complete", case_id=case_id, step="extraction")
-        yield _markdown_section("extraction", "Fact extraction", extraction_to_markdown(extraction))
-
-        # Step 1 -- RAG retrieval (non-critical: continue on failure)
-        step = await _start_step(db, case, "rag_retrieval", 1)
-        try:
-            chunks = await asyncio.wait_for(
+            ),
+            asyncio.wait_for(
                 rag_retrieve(request.raw_case_text),
                 timeout=settings.agent_step_timeout_seconds,
-            )
-        except Exception as exc:
-            logger.warning("rag_retrieval_failed", case_id=case_id, reason=str(exc))
-            chunks = []
-            await _fail_step(db, step)
+            ),
+            return_exceptions=True,
+        )
+        extraction_result: Any = gather_results[0]
+        rag_result: Any = gather_results[1]
+
+        # Extraction is critical — failure aborts the whole pipeline.
+        if isinstance(extraction_result, BaseException):
+            await _fail_step(db, extraction_step)
+            raise extraction_result
+        extraction = extraction_result
+        await _finish_step(db, extraction_step, extraction.model_dump())
+        logger.info("step_complete", case_id=case_id, step="extraction")
+
+        # RAG is non-critical — failure falls back to empty chunks so the
+        # rest of the pipeline (strategy, drafting, QA) can still run.
+        if isinstance(rag_result, BaseException):
+            logger.warning("rag_retrieval_failed", case_id=case_id, reason=str(rag_result))
+            chunks: list[str] = []
+            await _fail_step(db, rag_step)
         else:
-            await _finish_step(db, step, {"chunks": chunks})
+            chunks = rag_result
+            await _finish_step(db, rag_step, {"chunks": chunks})
             logger.info("step_complete", case_id=case_id, step="rag_retrieval", chunks=len(chunks))
+
+        yield _markdown_section("extraction", "Fact extraction", extraction_to_markdown(extraction))
         yield _markdown_section(
             "rag_retrieval",
             "Precedent retrieval",

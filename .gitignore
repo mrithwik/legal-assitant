@@ -36,6 +36,7 @@ Backend_walkthrough.md
 DEPLOYMENT_TUTORIAL.md
 Rubric.md
 docs/archive/*
+docs/tutorials/*
 
 # Database
 backend/*.db
