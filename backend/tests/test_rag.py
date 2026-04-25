@@ -1,13 +1,15 @@
 """
 Tests for the RAG pipeline components.
 
-Three test groups:
-  1. chunk_text       — pure unit tests, no mocking needed
-  2. rag_retrieve     — mocked OpenAI embeddings + Pinecone index
-  3. ingest_documents — mocked OpenAI + temp filesystem + mocked Pinecone
+Five test groups:
+  1. chunk_text          — pure unit tests, no mocking needed
+  2. rag_retrieve        — mocked OpenAI embeddings + Pinecone index
+  3. expand_query        — mocked OpenAI; tests query expansion (Feature 2)
+  4. rag_retrieve multi  — multi-query deduplication tests (Feature 2)
+  5. ingest_documents    — mocked OpenAI + temp filesystem + mocked Pinecone
 
 Integration group (bottom of file):
-  4. Pipeline integration — RAG chunks flow correctly into the strategy agent
+  6. Pipeline integration — RAG chunks flow correctly into the strategy agent
      and are reflected in SSE events and persisted DB results.
 
 All Pinecone and OpenAI calls are mocked; no network, no disk, no API cost.
@@ -19,6 +21,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 import pytest
 
 from src.rag.ingestion import CHUNK_OVERLAP, CHUNK_SIZE, chunk_text, ingest_documents
+from src.rag.query_expansion import expand_query
 from src.rag.retriever import rag_retrieve
 from src.rag.vector_store import PINECONE_METADATA_TEXT_KEY
 from tests.conftest import ANALYZE_FORM_BODY, HEADERS_A, collect_sse, run_analyze
@@ -118,6 +121,7 @@ async def test_rag_retrieve_returns_list_of_strings():
         patch("src.rag.retriever._openai") as mock_openai,
         patch("src.rag.retriever.pinecone_configured", return_value=True),
         patch("src.rag.retriever.get_pinecone_index", return_value=idx),
+        patch("src.rag.retriever.expand_query", new=AsyncMock(side_effect=lambda q: [q])),
     ):
         mock_openai.embeddings.create = _embed_mock()
         result = await rag_retrieve("contract dispute Kenya")
@@ -132,6 +136,7 @@ async def test_rag_retrieve_returns_correct_chunk_content():
         patch("src.rag.retriever._openai") as mock_openai,
         patch("src.rag.retriever.pinecone_configured", return_value=True),
         patch("src.rag.retriever.get_pinecone_index", return_value=idx),
+        patch("src.rag.retriever.expand_query", new=AsyncMock(side_effect=lambda q: [q])),
     ):
         mock_openai.embeddings.create = _embed_mock()
         result = await rag_retrieve("contract dispute")
@@ -145,6 +150,7 @@ async def test_rag_retrieve_empty_index_returns_empty_list():
         patch("src.rag.retriever._openai") as mock_openai,
         patch("src.rag.retriever.pinecone_configured", return_value=True),
         patch("src.rag.retriever.get_pinecone_index", return_value=idx),
+        patch("src.rag.retriever.expand_query", new=AsyncMock(side_effect=lambda q: [q])),
     ):
         mock_openai.embeddings.create = _embed_mock()
         result = await rag_retrieve("anything")
@@ -173,6 +179,7 @@ async def test_rag_retrieve_passes_correct_embedding_to_pinecone():
         patch("src.rag.retriever._openai") as mock_openai,
         patch("src.rag.retriever.pinecone_configured", return_value=True),
         patch("src.rag.retriever.get_pinecone_index", return_value=idx),
+        patch("src.rag.retriever.expand_query", new=AsyncMock(side_effect=lambda q: [q])),
     ):
         mock_openai.embeddings.create = _embed_mock(expected_vec)
         await rag_retrieve("some legal query")
@@ -186,6 +193,7 @@ async def test_rag_retrieve_respects_n_results_argument():
         patch("src.rag.retriever._openai") as mock_openai,
         patch("src.rag.retriever.pinecone_configured", return_value=True),
         patch("src.rag.retriever.get_pinecone_index", return_value=idx),
+        patch("src.rag.retriever.expand_query", new=AsyncMock(side_effect=lambda q: [q])),
     ):
         mock_openai.embeddings.create = _embed_mock()
         await rag_retrieve("query", n_results=2)
@@ -199,6 +207,7 @@ async def test_rag_retrieve_passes_requested_top_k_to_pinecone():
         patch("src.rag.retriever._openai") as mock_openai,
         patch("src.rag.retriever.pinecone_configured", return_value=True),
         patch("src.rag.retriever.get_pinecone_index", return_value=idx),
+        patch("src.rag.retriever.expand_query", new=AsyncMock(side_effect=lambda q: [q])),
     ):
         mock_openai.embeddings.create = _embed_mock()
         await rag_retrieve("query", n_results=10)
@@ -218,6 +227,7 @@ async def test_rag_retrieve_filters_out_empty_document_strings():
         patch("src.rag.retriever._openai") as mock_openai,
         patch("src.rag.retriever.pinecone_configured", return_value=True),
         patch("src.rag.retriever.get_pinecone_index", return_value=idx),
+        patch("src.rag.retriever.expand_query", new=AsyncMock(side_effect=lambda q: [q])),
     ):
         mock_openai.embeddings.create = _embed_mock()
         result = await rag_retrieve("query")
@@ -232,6 +242,7 @@ async def test_rag_retrieve_sets_include_metadata_true():
         patch("src.rag.retriever._openai") as mock_openai,
         patch("src.rag.retriever.pinecone_configured", return_value=True),
         patch("src.rag.retriever.get_pinecone_index", return_value=idx),
+        patch("src.rag.retriever.expand_query", new=AsyncMock(side_effect=lambda q: [q])),
     ):
         mock_openai.embeddings.create = _embed_mock()
         await rag_retrieve("query")
@@ -529,3 +540,197 @@ async def test_rag_step_index_is_1(client, mock_agents):
 
     rag_step = next(s for s in detail["steps"] if s["step_name"] == "rag_retrieval")
     assert rag_step["step_index"] == 1
+
+
+# ── 3. expand_query (Feature 2) ───────────────────────────────────────────────
+
+
+def _instructor_mock(queries: list[str]):
+    """Return a mock instructor client whose create() resolves to the given queries."""
+    mock_result = MagicMock()
+    mock_result.queries = queries
+    mock_client = MagicMock()
+    mock_client.chat.completions.create = AsyncMock(return_value=mock_result)
+    return mock_client
+
+
+async def test_expand_query_returns_list_of_strings():
+    with patch("src.rag.query_expansion.instructor") as mock_instr:
+        mock_instr.from_openai.return_value = _instructor_mock(["query A", "query B"])
+        mock_instr.Mode.JSON = "json"
+        result = await expand_query("plaintiff failed to pay rent")
+    assert isinstance(result, list)
+    assert all(isinstance(q, str) for q in result)
+
+
+async def test_expand_query_returns_n_queries_from_llm():
+    expected = ["landlord eviction Kenya", "breach of tenancy agreement", "rent arrears statute"]
+    with patch("src.rag.query_expansion.instructor") as mock_instr:
+        mock_instr.from_openai.return_value = _instructor_mock(expected)
+        mock_instr.Mode.JSON = "json"
+        result = await expand_query("tenant refused to vacate after lease expired")
+    assert result == expected
+
+
+async def test_expand_query_strips_whitespace_from_each_query():
+    raw = ["  negligence  ", "duty of care Kenya  ", "  tort liability"]
+    with patch("src.rag.query_expansion.instructor") as mock_instr:
+        mock_instr.from_openai.return_value = _instructor_mock(raw)
+        mock_instr.Mode.JSON = "json"
+        result = await expand_query("accident on construction site")
+    assert result == [q.strip() for q in raw]
+
+
+async def test_expand_query_filters_blank_entries_from_llm():
+    raw = ["valid query", "", "   ", "another valid query"]
+    with patch("src.rag.query_expansion.instructor") as mock_instr:
+        mock_instr.from_openai.return_value = _instructor_mock(raw)
+        mock_instr.Mode.JSON = "json"
+        result = await expand_query("some case text")
+    assert result == ["valid query", "another valid query"]
+
+
+async def test_expand_query_falls_back_to_original_text_on_llm_error():
+    with patch("src.rag.query_expansion.instructor") as mock_instr:
+        mock_instr.from_openai.return_value = MagicMock(
+            chat=MagicMock(
+                completions=MagicMock(
+                    create=AsyncMock(side_effect=Exception("OpenAI unavailable"))
+                )
+            )
+        )
+        mock_instr.Mode.JSON = "json"
+        original = "contract dispute over land sale"
+        result = await expand_query(original)
+    assert result == [original]
+
+
+async def test_expand_query_falls_back_when_all_queries_blank():
+    with patch("src.rag.query_expansion.instructor") as mock_instr:
+        mock_instr.from_openai.return_value = _instructor_mock(["", "   "])
+        mock_instr.Mode.JSON = "json"
+        original = "some case text"
+        result = await expand_query(original)
+    assert result == [original]
+
+
+async def test_expand_query_empty_string_returns_without_llm_call():
+    with patch("src.rag.query_expansion.instructor") as mock_instr:
+        result = await expand_query("")
+    mock_instr.from_openai.assert_not_called()
+    assert result == [""]
+
+
+async def test_expand_query_whitespace_only_returns_without_llm_call():
+    with patch("src.rag.query_expansion.instructor") as mock_instr:
+        result = await expand_query("   ")
+    mock_instr.from_openai.assert_not_called()
+    assert result == ["   "]
+
+
+# ── 4. rag_retrieve multi-query / deduplication (Feature 2) ──────────────────
+
+
+async def test_rag_retrieve_calls_pinecone_once_per_expanded_query():
+    """Pinecone should be queried N times — one per query returned by expand_query."""
+    idx = _index_mock_for_docs(["doc"])
+    n_queries = 3
+    with (
+        patch("src.rag.retriever._openai") as mock_openai,
+        patch("src.rag.retriever.pinecone_configured", return_value=True),
+        patch("src.rag.retriever.get_pinecone_index", return_value=idx),
+        patch(
+            "src.rag.retriever.expand_query",
+            new=AsyncMock(return_value=["q1", "q2", "q3"]),
+        ),
+    ):
+        mock_openai.embeddings.create = _embed_mock()
+        await rag_retrieve("some case text")
+    assert idx.query.call_count == n_queries
+
+
+async def test_rag_retrieve_deduplicates_identical_chunks_across_queries():
+    """The same chunk returned by multiple expanded queries must appear only once."""
+    shared_chunk = "Section 3(3) Law of Contract Act."
+    idx = _index_mock_for_docs([shared_chunk])
+    with (
+        patch("src.rag.retriever._openai") as mock_openai,
+        patch("src.rag.retriever.pinecone_configured", return_value=True),
+        patch("src.rag.retriever.get_pinecone_index", return_value=idx),
+        patch(
+            "src.rag.retriever.expand_query",
+            new=AsyncMock(return_value=["q1", "q2", "q3"]),
+        ),
+    ):
+        mock_openai.embeddings.create = _embed_mock()
+        result = await rag_retrieve("contract case")
+    assert result.count(shared_chunk) == 1
+
+
+async def test_rag_retrieve_union_of_unique_chunks_across_queries():
+    """Distinct chunks from different expanded queries are all included in the result."""
+    chunks_per_query = [["Chunk A"], ["Chunk B"], ["Chunk C"]]
+    call_index = {"i": 0}
+
+    def _index_for_call():
+        i = call_index["i"]
+        call_index["i"] += 1
+        return _index_mock_for_docs(chunks_per_query[i % len(chunks_per_query)])
+
+    # Pinecone returns different docs for each of the 3 expanded queries.
+    idx_a = _index_mock_for_docs(["Chunk A"])
+    idx_b = _index_mock_for_docs(["Chunk B"])
+    idx_c = _index_mock_for_docs(["Chunk C"])
+    call_seq = iter([idx_a, idx_b, idx_c])
+
+    with (
+        patch("src.rag.retriever._openai") as mock_openai,
+        patch("src.rag.retriever.pinecone_configured", return_value=True),
+        patch("src.rag.retriever.get_pinecone_index", side_effect=call_seq),
+        patch(
+            "src.rag.retriever.expand_query",
+            new=AsyncMock(return_value=["q1", "q2", "q3"]),
+        ),
+    ):
+        mock_openai.embeddings.create = _embed_mock()
+        result = await rag_retrieve("multi-query case")
+    assert set(result) == {"Chunk A", "Chunk B", "Chunk C"}
+
+
+async def test_rag_retrieve_preserves_first_occurrence_order_on_dedup():
+    """When a chunk appears in multiple query results, only the first occurrence is kept."""
+    idx = _index_mock_for_docs(["Alpha", "Beta"])
+    with (
+        patch("src.rag.retriever._openai") as mock_openai,
+        patch("src.rag.retriever.pinecone_configured", return_value=True),
+        patch("src.rag.retriever.get_pinecone_index", return_value=idx),
+        patch(
+            "src.rag.retriever.expand_query",
+            new=AsyncMock(return_value=["q1", "q2"]),
+        ),
+    ):
+        mock_openai.embeddings.create = _embed_mock()
+        result = await rag_retrieve("case text")
+    # Each query returns ["Alpha", "Beta"]; after dedup we still get both exactly once.
+    assert result == ["Alpha", "Beta"]
+
+
+async def test_rag_retrieve_continues_when_one_expanded_query_fails():
+    """If one parallel Pinecone query raises, results from the others are still returned."""
+    good_idx = _index_mock_for_docs(["Good chunk."])
+    bad_idx = MagicMock()
+    bad_idx.query.side_effect = RuntimeError("pinecone timeout")
+    call_seq = iter([good_idx, bad_idx])
+
+    with (
+        patch("src.rag.retriever._openai") as mock_openai,
+        patch("src.rag.retriever.pinecone_configured", return_value=True),
+        patch("src.rag.retriever.get_pinecone_index", side_effect=call_seq),
+        patch(
+            "src.rag.retriever.expand_query",
+            new=AsyncMock(return_value=["q1", "q2"]),
+        ),
+    ):
+        mock_openai.embeddings.create = _embed_mock()
+        result = await rag_retrieve("case text")
+    assert result == ["Good chunk."]

@@ -126,59 +126,59 @@ async def run_pipeline(
     try:
         # Steps 0 & 1 -- Extraction + RAG run in parallel.
         # Both only need raw_case_text so they are completely independent.
-        # We register both DB steps first (sequential — AsyncSession is not
-        # concurrency-safe), then race the LLM work with asyncio.gather(),
-        # then write results back to DB sequentially once both are done.
+        # DB steps are registered first (sequential — AsyncSession is not
+        # concurrency-safe). RAG is fired as a background task so extraction
+        # can stream its SSE section as soon as it finishes, without waiting
+        # for RAG to complete. This matters when RAG is slow (e.g. Pinecone
+        # cold start): in a gather() approach the extraction SSE would be
+        # delayed until RAG returns; with create_task() it streams immediately.
         extraction_step = await _start_step(db, case, "extraction", 0)
         rag_step = await _start_step(db, case, "rag_retrieval", 1)
 
-        # return_exceptions=True means a failure in one coroutine is returned
-        # as the result value rather than immediately cancelling the other.
-        # asyncio.gather() with return_exceptions=True types its return value
-        # as Sequence[object], which mypy can't narrow further — Any lets us
-        # work with the results normally; isinstance() guards at runtime.
-        gather_results: tuple[Any, Any] = await asyncio.gather(
-            asyncio.wait_for(
-                _run_with_retry(run_extraction_agent, request.raw_case_text),
-                timeout=settings.agent_step_timeout_seconds,
-            ),
+        rag_task: asyncio.Task[Any] = asyncio.create_task(
             asyncio.wait_for(
                 rag_retrieve(request.raw_case_text),
                 timeout=settings.agent_step_timeout_seconds,
-            ),
-            return_exceptions=True,
+            )
         )
-        extraction_result: Any = gather_results[0]
-        rag_result: Any = gather_results[1]
 
-        # Extraction is critical — failure aborts the whole pipeline.
-        # But RAG has already completed (gather() awaited both), so finalize
-        # rag_step before raising so no started step is left stuck in PROCESSING.
-        if isinstance(extraction_result, BaseException):
+        # Await extraction on its own — yields SSE as soon as it completes,
+        # independent of how long RAG takes.
+        try:
+            extraction = await asyncio.wait_for(
+                _run_with_retry(run_extraction_agent, request.raw_case_text),
+                timeout=settings.agent_step_timeout_seconds,
+            )
+        except Exception as exc:
+            # Extraction failed — cancel RAG if still running and mark both
+            # steps terminal before aborting so no step is left in PROCESSING.
             await _fail_step(db, extraction_step)
-            if isinstance(rag_result, BaseException):
-                logger.warning("rag_retrieval_failed", case_id=case_id, reason=str(rag_result))
-                await _fail_step(db, rag_step)
-            else:
-                await _finish_step(db, rag_step, {"chunks": rag_result})
-                logger.info("step_complete", case_id=case_id, step="rag_retrieval", chunks=len(rag_result))
-            raise extraction_result
-        extraction = extraction_result
+            if not rag_task.done():
+                rag_task.cancel()
+                try:
+                    await rag_task
+                except (asyncio.CancelledError, Exception):
+                    pass
+            await _fail_step(db, rag_step)
+            raise exc
+
         await _finish_step(db, extraction_step, extraction.model_dump())
         logger.info("step_complete", case_id=case_id, step="extraction")
+        # Stream extraction to the browser immediately — RAG may still be running
+        yield _markdown_section("extraction", "Fact extraction", extraction_to_markdown(extraction))
 
-        # RAG is non-critical — failure falls back to empty chunks so the
-        # rest of the pipeline (strategy, drafting, QA) can still run.
-        if isinstance(rag_result, BaseException):
-            logger.warning("rag_retrieval_failed", case_id=case_id, reason=str(rag_result))
-            chunks: list[str] = []
+        # Collect RAG — almost certainly already done since extraction takes longer.
+        # Non-critical: failure falls back to empty chunks so the pipeline continues.
+        try:
+            chunks: list[str] = await rag_task
+        except Exception as exc:
+            logger.warning("rag_retrieval_failed", case_id=case_id, reason=str(exc))
+            chunks = []
             await _fail_step(db, rag_step)
         else:
-            chunks = rag_result
             await _finish_step(db, rag_step, {"chunks": chunks})
             logger.info("step_complete", case_id=case_id, step="rag_retrieval", chunks=len(chunks))
 
-        yield _markdown_section("extraction", "Fact extraction", extraction_to_markdown(extraction))
         yield _markdown_section(
             "rag_retrieval",
             "Precedent retrieval",
