@@ -20,9 +20,9 @@ logger = get_logger(__name__)
 _MODEL = "gpt-4o-mini"
 _N_QUERIES = 5
 
-_PROMPT = """You are a Kenyan legal research assistant.
+_PROMPT = f"""You are a Kenyan legal research assistant.
 
-Given a case description, generate exactly {n} short, focused search queries
+Given a case description, generate exactly {_N_QUERIES} short, focused search queries
 to retrieve relevant Kenyan legal precedents and statutes from a vector database.
 
 Rules:
@@ -33,7 +33,7 @@ Rules:
 - Do not include the party names or dates — focus on legal concepts only.
 
 Return ONLY a JSON object with a single key "queries" containing a list of strings.
-""".format(n=_N_QUERIES)
+"""
 
 
 class _ExpandedQueries(BaseModel):

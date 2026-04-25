@@ -15,6 +15,7 @@ On any unrecoverable step failure the pipeline aborts, the ``Case`` is marked
 """
 
 import asyncio
+import contextlib
 import json
 import uuid
 from collections.abc import AsyncGenerator
@@ -155,10 +156,8 @@ async def run_pipeline(
             await _fail_step(db, extraction_step)
             if not rag_task.done():
                 rag_task.cancel()
-                try:
+                with contextlib.suppress(asyncio.CancelledError, Exception):
                     await rag_task
-                except (asyncio.CancelledError, Exception):
-                    pass
             await _fail_step(db, rag_step)
             raise exc
 
