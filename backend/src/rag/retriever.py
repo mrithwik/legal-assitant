@@ -5,7 +5,7 @@ Retrieval Improvements pipeline (applied in order):
   1. Query expansion      — GPT-4o-mini generates 5 focused legal queries
   2. Statute filter       — scopes each Pinecone search to relevant source
                             files when an explicit statute name is detected
-  3. Score threshold      — drops matches below cosine similarity 0.70
+  3. Score threshold      — drops matches below cosine similarity 0.60
   4. Deduplication        — first-occurrence order preserved across queries
   5. LLM judge            — GPT-4o-mini selects the most relevant subset
   6. Contextual compress  — each selected chunk is trimmed to relevant

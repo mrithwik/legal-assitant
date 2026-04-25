@@ -62,7 +62,8 @@ class _CompressResult(BaseModel):
 async def judge_chunks(case_text: str, chunks: list[str], target: int = 6) -> list[str]:
     """Score and select the most legally relevant chunks for this case.
 
-    Falls back to returning all input chunks if the LLM call fails.
+    Falls back to returning all input chunks if the LLM call fails or if the
+    LLM returns no selected indices (e.g. overly conservative scoring).
     """
     if not chunks:
         return chunks
