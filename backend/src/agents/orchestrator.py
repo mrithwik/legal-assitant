@@ -18,6 +18,7 @@ import asyncio
 import json
 import uuid
 from collections.abc import AsyncGenerator
+from typing import Any
 
 from openai import APIConnectionError, APITimeoutError, RateLimitError
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -137,7 +138,9 @@ async def run_pipeline(
         # FEATURE 1: Parallel execution — both coroutines race simultaneously.
         # return_exceptions=True means a failure in one doesn't cancel the other;
         # instead the exception is returned as the result and handled below.
-        extraction_result, rag_result = await asyncio.gather(
+        # asyncio.gather() with return_exceptions=True returns Sequence[object], so
+        # we use Any here — isinstance checks below narrow the types safely.
+        gather_results: tuple[Any, Any] = await asyncio.gather(
             asyncio.wait_for(                          # extraction: ~15s
                 _run_with_retry(run_extraction_agent, request.raw_case_text),
                 timeout=settings.agent_step_timeout_seconds,
@@ -148,6 +151,8 @@ async def run_pipeline(
             ),
             return_exceptions=True,
         )
+        extraction_result: Any = gather_results[0]
+        rag_result: Any = gather_results[1]
 
         # DB updates run sequentially after both complete — AsyncSession is not concurrency-safe.
         # Extraction is critical: failure aborts the pipeline.
@@ -161,7 +166,7 @@ async def run_pipeline(
         # RAG is non-critical: failure falls back to empty chunks so pipeline continues.
         if isinstance(rag_result, BaseException):
             logger.warning("rag_retrieval_failed", case_id=case_id, reason=str(rag_result))
-            chunks = []
+            chunks: list[str] = []
             await _fail_step(db, rag_step)
         else:
             chunks = rag_result

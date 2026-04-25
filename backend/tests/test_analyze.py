@@ -520,3 +520,117 @@ async def test_delete_other_users_case_returns_404(client, mock_agents):
     case_id = await run_analyze(client, headers=HEADERS_A)
     r = await client.delete(f"/api/v1/cases/{case_id}", headers=HEADERS_B)
     assert r.status_code == 404
+
+
+# ── Feature 1: Parallel extraction + RAG ──────────────────────────────────────
+# Extraction and RAG run concurrently via asyncio.gather(). RAG is non-critical:
+# a failure falls back to empty chunks so the rest of the pipeline is unaffected.
+
+
+async def test_rag_failure_does_not_abort_pipeline(client, mock_agents):
+    """RAG is non-critical: a Pinecone error must not prevent the pipeline from completing."""
+    mock_agents["rag"].side_effect = RuntimeError("Pinecone unavailable")
+    async with client.stream(
+        "POST", "/api/v1/analyze", data=ANALYZE_FORM_BODY, headers=HEADERS_A
+    ) as resp:
+        events = await collect_sse(resp)
+    assert events[-1].get("type") == "complete"
+
+
+async def test_rag_failure_rag_section_still_emitted(client, mock_agents):
+    """When RAG fails, a rag_retrieval section must still be emitted to the client."""
+    mock_agents["rag"].side_effect = RuntimeError("Pinecone unavailable")
+    async with client.stream(
+        "POST", "/api/v1/analyze", data=ANALYZE_FORM_BODY, headers=HEADERS_A
+    ) as resp:
+        events = await collect_sse(resp)
+    section_ids = [e.get("section_id") for e in _markdown_sections(events)]
+    assert "rag_retrieval" in section_ids
+
+
+async def test_rag_failure_section_shows_no_precedents(client, mock_agents):
+    """When RAG fails, the rag_retrieval section must show the empty-chunks fallback text."""
+    mock_agents["rag"].side_effect = RuntimeError("Pinecone unavailable")
+    async with client.stream(
+        "POST", "/api/v1/analyze", data=ANALYZE_FORM_BODY, headers=HEADERS_A
+    ) as resp:
+        events = await collect_sse(resp)
+    rag = next(e for e in _markdown_sections(events) if e["section_id"] == "rag_retrieval")
+    assert "No precedents" in rag["markdown"]
+
+
+async def test_rag_failure_all_five_sections_still_emitted(client, mock_agents):
+    """When only RAG fails, all five pipeline sections must still be emitted."""
+    mock_agents["rag"].side_effect = RuntimeError("Pinecone unavailable")
+    async with client.stream(
+        "POST", "/api/v1/analyze", data=ANALYZE_FORM_BODY, headers=HEADERS_A
+    ) as resp:
+        events = await collect_sse(resp)
+    section_ids = [e["section_id"] for e in _markdown_sections(events)]
+    assert section_ids == EXPECTED_SECTION_IDS
+
+
+async def test_rag_failure_strategy_receives_empty_chunks(client, mock_agents):
+    """When RAG fails, strategy must be called with empty chunks (not skipped entirely)."""
+    mock_agents["rag"].side_effect = RuntimeError("Pinecone unavailable")
+    async with client.stream(
+        "POST", "/api/v1/analyze", data=ANALYZE_FORM_BODY, headers=HEADERS_A
+    ) as resp:
+        await collect_sse(resp)
+    assert mock_agents["strategy"].call_args.args[1] == []
+
+
+async def test_rag_called_with_raw_case_text(client, mock_agents):
+    """RAG retrieval must receive the same raw case text as the extraction agent."""
+    async with client.stream(
+        "POST", "/api/v1/analyze", data=ANALYZE_FORM_BODY, headers=HEADERS_A
+    ) as resp:
+        await collect_sse(resp)
+    mock_agents["rag"].assert_called_once_with(SAMPLE_CASE)
+
+
+async def test_db_step_index_extraction_is_zero(client, mock_agents):
+    """Extraction must be stored at step_index 0 in the database."""
+    case_id = await run_analyze(client)
+    detail = (await client.get(f"/api/v1/cases/{case_id}", headers=HEADERS_A)).json()
+    ext = next(s for s in detail["steps"] if s["step_name"] == "extraction")
+    assert ext["step_index"] == 0
+
+
+async def test_db_step_index_rag_is_one(client, mock_agents):
+    """RAG retrieval must be stored at step_index 1 in the database."""
+    case_id = await run_analyze(client)
+    detail = (await client.get(f"/api/v1/cases/{case_id}", headers=HEADERS_A)).json()
+    rag = next(s for s in detail["steps"] if s["step_name"] == "rag_retrieval")
+    assert rag["step_index"] == 1
+
+
+async def test_rag_failure_step_marked_failed_in_db(client, mock_agents):
+    """When RAG raises an exception, its DB step record must be saved with status FAILED."""
+    mock_agents["rag"].side_effect = RuntimeError("Pinecone unavailable")
+    case_id = await run_analyze(client)
+    detail = (await client.get(f"/api/v1/cases/{case_id}", headers=HEADERS_A)).json()
+    rag_step = next(s for s in detail["steps"] if s["step_name"] == "rag_retrieval")
+    assert rag_step["status"] == "FAILED"
+
+
+async def test_rag_failure_case_status_is_completed(client, mock_agents):
+    """When only RAG fails, the overall case status must be COMPLETED (not FAILED)."""
+    mock_agents["rag"].side_effect = RuntimeError("Pinecone unavailable")
+    case_id = await run_analyze(client)
+    history = (await client.get("/api/v1/cases", headers=HEADERS_A)).json()
+    case = next(c for c in history if c["id"] == case_id)
+    assert case["status"] == "COMPLETED"
+
+
+async def test_extraction_failure_with_rag_success_still_aborts(client, mock_agents):
+    """Extraction failure must abort the pipeline even if RAG succeeds."""
+    mock_agents["extraction"].side_effect = RuntimeError("LLM timeout")
+    async with client.stream(
+        "POST", "/api/v1/analyze", data=ANALYZE_FORM_BODY, headers=HEADERS_A
+    ) as resp:
+        events = await collect_sse(resp)
+    assert events[-1].get("type") == "error"
+    section_ids = [e.get("section_id") for e in _markdown_sections(events)]
+    assert "extraction" not in section_ids
+    assert "strategy" not in section_ids
