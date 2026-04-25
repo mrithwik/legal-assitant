@@ -64,7 +64,7 @@ async def expand_query(case_text: str) -> list[str]:
             ],
             temperature=0.2,
         )
-        queries = [q.strip() for q in result.queries if q.strip()]
+        queries = [q.strip() for q in result.queries if q.strip()][:_N_QUERIES]
     except Exception as exc:
         logger.warning("query_expansion_failed", reason=str(exc), fallback="original_text")
         return [case_text]

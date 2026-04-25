@@ -44,7 +44,7 @@ async def _retrieve_for_query(query: str, n_results: int) -> list[str]:
     embed_resp = await _openai.embeddings.create(model=EMBED_MODEL, input=query)
     query_embedding: list[float] = embed_resp.data[0].embedding
     duration_ms = round((time.monotonic() - start) * 1000, 1)
-    logger.info("rag_embed_complete", model=EMBED_MODEL, duration_ms=duration_ms, query=query[:60])
+    logger.info("rag_embed_complete", model=EMBED_MODEL, duration_ms=duration_ms, query_len=len(query))
 
     def _query_pinecone() -> list[str]:
         index = get_pinecone_index()

@@ -259,7 +259,7 @@ async def test_rag_retrieve_returns_empty_when_pinecone_not_configured():
     mock_openai.embeddings.create.assert_not_called()
 
 
-# ── 3. ingest_documents ───────────────────────────────────────────────────────
+# ── 5. ingest_documents ───────────────────────────────────────────────────────
 
 
 @pytest.fixture
@@ -429,7 +429,7 @@ def test_ingest_documents_accepts_markdown_files(tmp_path: Path):
     assert result["chunks_added"] > 0
 
 
-# ── 4. Pipeline integration ───────────────────────────────────────────────────
+# ── 6. Pipeline integration ───────────────────────────────────────────────────
 
 
 async def test_strategy_receives_rag_chunks_as_second_argument(client, mock_agents):
@@ -669,14 +669,6 @@ async def test_rag_retrieve_deduplicates_identical_chunks_across_queries():
 
 async def test_rag_retrieve_union_of_unique_chunks_across_queries():
     """Distinct chunks from different expanded queries are all included in the result."""
-    chunks_per_query = [["Chunk A"], ["Chunk B"], ["Chunk C"]]
-    call_index = {"i": 0}
-
-    def _index_for_call():
-        i = call_index["i"]
-        call_index["i"] += 1
-        return _index_mock_for_docs(chunks_per_query[i % len(chunks_per_query)])
-
     # Pinecone returns different docs for each of the 3 expanded queries.
     idx_a = _index_mock_for_docs(["Chunk A"])
     idx_b = _index_mock_for_docs(["Chunk B"])

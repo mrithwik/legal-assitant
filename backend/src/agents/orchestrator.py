@@ -150,16 +150,16 @@ async def run_pipeline(
                 _run_with_retry(run_extraction_agent, request.raw_case_text),
                 timeout=settings.agent_step_timeout_seconds,
             )
-        except Exception as exc:
+        except Exception:
             # Extraction failed — cancel RAG if still running and mark both
             # steps terminal before aborting so no step is left in PROCESSING.
             await _fail_step(db, extraction_step)
             if not rag_task.done():
                 rag_task.cancel()
-                with contextlib.suppress(asyncio.CancelledError, Exception):
-                    await rag_task
+            with contextlib.suppress(asyncio.CancelledError, Exception):
+                await rag_task
             await _fail_step(db, rag_step)
-            raise exc
+            raise
 
         await _finish_step(db, extraction_step, extraction.model_dump())
         logger.info("step_complete", case_id=case_id, step="extraction")
