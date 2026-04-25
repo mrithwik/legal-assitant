@@ -108,6 +108,7 @@ def _index_mock_for_docs(texts: list[str]):
     matches = []
     for t in texts:
         m = MagicMock()
+        m.score = 0.9  # above _SCORE_THRESHOLD so tests are not affected by the filter
         m.metadata = {PINECONE_METADATA_TEXT_KEY: t}
         matches.append(m)
     idx = MagicMock()
@@ -122,6 +123,8 @@ async def test_rag_retrieve_returns_list_of_strings():
         patch("src.rag.retriever.pinecone_configured", return_value=True),
         patch("src.rag.retriever.get_pinecone_index", return_value=idx),
         patch("src.rag.retriever.expand_query", new=AsyncMock(side_effect=lambda q: [q])),
+        patch("src.rag.retriever.judge_chunks", new=AsyncMock(side_effect=lambda q, c, **kw: c)),
+        patch("src.rag.retriever.compress_chunks", new=AsyncMock(side_effect=lambda q, c: c)),
     ):
         mock_openai.embeddings.create = _embed_mock()
         result = await rag_retrieve("contract dispute Kenya")
@@ -137,6 +140,8 @@ async def test_rag_retrieve_returns_correct_chunk_content():
         patch("src.rag.retriever.pinecone_configured", return_value=True),
         patch("src.rag.retriever.get_pinecone_index", return_value=idx),
         patch("src.rag.retriever.expand_query", new=AsyncMock(side_effect=lambda q: [q])),
+        patch("src.rag.retriever.judge_chunks", new=AsyncMock(side_effect=lambda q, c, **kw: c)),
+        patch("src.rag.retriever.compress_chunks", new=AsyncMock(side_effect=lambda q, c: c)),
     ):
         mock_openai.embeddings.create = _embed_mock()
         result = await rag_retrieve("contract dispute")
@@ -180,6 +185,8 @@ async def test_rag_retrieve_passes_correct_embedding_to_pinecone():
         patch("src.rag.retriever.pinecone_configured", return_value=True),
         patch("src.rag.retriever.get_pinecone_index", return_value=idx),
         patch("src.rag.retriever.expand_query", new=AsyncMock(side_effect=lambda q: [q])),
+        patch("src.rag.retriever.judge_chunks", new=AsyncMock(side_effect=lambda q, c, **kw: c)),
+        patch("src.rag.retriever.compress_chunks", new=AsyncMock(side_effect=lambda q, c: c)),
     ):
         mock_openai.embeddings.create = _embed_mock(expected_vec)
         await rag_retrieve("some legal query")
@@ -194,6 +201,8 @@ async def test_rag_retrieve_respects_n_results_argument():
         patch("src.rag.retriever.pinecone_configured", return_value=True),
         patch("src.rag.retriever.get_pinecone_index", return_value=idx),
         patch("src.rag.retriever.expand_query", new=AsyncMock(side_effect=lambda q: [q])),
+        patch("src.rag.retriever.judge_chunks", new=AsyncMock(side_effect=lambda q, c, **kw: c)),
+        patch("src.rag.retriever.compress_chunks", new=AsyncMock(side_effect=lambda q, c: c)),
     ):
         mock_openai.embeddings.create = _embed_mock()
         await rag_retrieve("query", n_results=2)
@@ -208,6 +217,8 @@ async def test_rag_retrieve_passes_requested_top_k_to_pinecone():
         patch("src.rag.retriever.pinecone_configured", return_value=True),
         patch("src.rag.retriever.get_pinecone_index", return_value=idx),
         patch("src.rag.retriever.expand_query", new=AsyncMock(side_effect=lambda q: [q])),
+        patch("src.rag.retriever.judge_chunks", new=AsyncMock(side_effect=lambda q, c, **kw: c)),
+        patch("src.rag.retriever.compress_chunks", new=AsyncMock(side_effect=lambda q, c: c)),
     ):
         mock_openai.embeddings.create = _embed_mock()
         await rag_retrieve("query", n_results=10)
@@ -219,6 +230,7 @@ async def test_rag_retrieve_filters_out_empty_document_strings():
     matches = []
     for t in texts:
         m = MagicMock()
+        m.score = 0.9
         m.metadata = {PINECONE_METADATA_TEXT_KEY: t}
         matches.append(m)
     idx = MagicMock()
@@ -228,6 +240,8 @@ async def test_rag_retrieve_filters_out_empty_document_strings():
         patch("src.rag.retriever.pinecone_configured", return_value=True),
         patch("src.rag.retriever.get_pinecone_index", return_value=idx),
         patch("src.rag.retriever.expand_query", new=AsyncMock(side_effect=lambda q: [q])),
+        patch("src.rag.retriever.judge_chunks", new=AsyncMock(side_effect=lambda q, c, **kw: c)),
+        patch("src.rag.retriever.compress_chunks", new=AsyncMock(side_effect=lambda q, c: c)),
     ):
         mock_openai.embeddings.create = _embed_mock()
         result = await rag_retrieve("query")
@@ -243,6 +257,8 @@ async def test_rag_retrieve_sets_include_metadata_true():
         patch("src.rag.retriever.pinecone_configured", return_value=True),
         patch("src.rag.retriever.get_pinecone_index", return_value=idx),
         patch("src.rag.retriever.expand_query", new=AsyncMock(side_effect=lambda q: [q])),
+        patch("src.rag.retriever.judge_chunks", new=AsyncMock(side_effect=lambda q, c, **kw: c)),
+        patch("src.rag.retriever.compress_chunks", new=AsyncMock(side_effect=lambda q, c: c)),
     ):
         mock_openai.embeddings.create = _embed_mock()
         await rag_retrieve("query")
@@ -639,10 +655,9 @@ async def test_rag_retrieve_calls_pinecone_once_per_expanded_query():
         patch("src.rag.retriever._openai") as mock_openai,
         patch("src.rag.retriever.pinecone_configured", return_value=True),
         patch("src.rag.retriever.get_pinecone_index", return_value=idx),
-        patch(
-            "src.rag.retriever.expand_query",
-            new=AsyncMock(return_value=["q1", "q2", "q3"]),
-        ),
+        patch("src.rag.retriever.expand_query", new=AsyncMock(return_value=["q1", "q2", "q3"])),
+        patch("src.rag.retriever.judge_chunks", new=AsyncMock(side_effect=lambda q, c, **kw: c)),
+        patch("src.rag.retriever.compress_chunks", new=AsyncMock(side_effect=lambda q, c: c)),
     ):
         mock_openai.embeddings.create = _embed_mock()
         await rag_retrieve("some case text")
@@ -657,10 +672,9 @@ async def test_rag_retrieve_deduplicates_identical_chunks_across_queries():
         patch("src.rag.retriever._openai") as mock_openai,
         patch("src.rag.retriever.pinecone_configured", return_value=True),
         patch("src.rag.retriever.get_pinecone_index", return_value=idx),
-        patch(
-            "src.rag.retriever.expand_query",
-            new=AsyncMock(return_value=["q1", "q2", "q3"]),
-        ),
+        patch("src.rag.retriever.expand_query", new=AsyncMock(return_value=["q1", "q2", "q3"])),
+        patch("src.rag.retriever.judge_chunks", new=AsyncMock(side_effect=lambda q, c, **kw: c)),
+        patch("src.rag.retriever.compress_chunks", new=AsyncMock(side_effect=lambda q, c: c)),
     ):
         mock_openai.embeddings.create = _embed_mock()
         result = await rag_retrieve("contract case")
@@ -679,10 +693,9 @@ async def test_rag_retrieve_union_of_unique_chunks_across_queries():
         patch("src.rag.retriever._openai") as mock_openai,
         patch("src.rag.retriever.pinecone_configured", return_value=True),
         patch("src.rag.retriever.get_pinecone_index", side_effect=call_seq),
-        patch(
-            "src.rag.retriever.expand_query",
-            new=AsyncMock(return_value=["q1", "q2", "q3"]),
-        ),
+        patch("src.rag.retriever.expand_query", new=AsyncMock(return_value=["q1", "q2", "q3"])),
+        patch("src.rag.retriever.judge_chunks", new=AsyncMock(side_effect=lambda q, c, **kw: c)),
+        patch("src.rag.retriever.compress_chunks", new=AsyncMock(side_effect=lambda q, c: c)),
     ):
         mock_openai.embeddings.create = _embed_mock()
         result = await rag_retrieve("multi-query case")
@@ -696,10 +709,9 @@ async def test_rag_retrieve_preserves_first_occurrence_order_on_dedup():
         patch("src.rag.retriever._openai") as mock_openai,
         patch("src.rag.retriever.pinecone_configured", return_value=True),
         patch("src.rag.retriever.get_pinecone_index", return_value=idx),
-        patch(
-            "src.rag.retriever.expand_query",
-            new=AsyncMock(return_value=["q1", "q2"]),
-        ),
+        patch("src.rag.retriever.expand_query", new=AsyncMock(return_value=["q1", "q2"])),
+        patch("src.rag.retriever.judge_chunks", new=AsyncMock(side_effect=lambda q, c, **kw: c)),
+        patch("src.rag.retriever.compress_chunks", new=AsyncMock(side_effect=lambda q, c: c)),
     ):
         mock_openai.embeddings.create = _embed_mock()
         result = await rag_retrieve("case text")
@@ -718,10 +730,9 @@ async def test_rag_retrieve_continues_when_one_expanded_query_fails():
         patch("src.rag.retriever._openai") as mock_openai,
         patch("src.rag.retriever.pinecone_configured", return_value=True),
         patch("src.rag.retriever.get_pinecone_index", side_effect=call_seq),
-        patch(
-            "src.rag.retriever.expand_query",
-            new=AsyncMock(return_value=["q1", "q2"]),
-        ),
+        patch("src.rag.retriever.expand_query", new=AsyncMock(return_value=["q1", "q2"])),
+        patch("src.rag.retriever.judge_chunks", new=AsyncMock(side_effect=lambda q, c, **kw: c)),
+        patch("src.rag.retriever.compress_chunks", new=AsyncMock(side_effect=lambda q, c: c)),
     ):
         mock_openai.embeddings.create = _embed_mock()
         result = await rag_retrieve("case text")

@@ -1,0 +1,549 @@
+"""Tests for the Retrieval Improvements feature.
+
+Six test groups:
+  1. _is_substantive_chunk  — pure unit tests for the ingestion-time filter
+  2. _source_filter_for_query — statute-aware Pinecone metadata filter
+  3. score threshold          — low-score Pinecone matches are dropped
+  4. judge_chunks             — LLM judge selects relevant subset
+  5. compress_chunks          — LLM contextual compression
+  6. rag_retrieve integration — full pipeline with judge + compress called
+
+All LLM and Pinecone calls are mocked; no network, no API cost.
+"""
+
+from unittest.mock import AsyncMock, MagicMock, patch
+
+from src.rag.ingestion import _is_substantive_chunk
+from src.rag.reranker import compress_chunks, judge_chunks
+from src.rag.retriever import _source_filter_for_query, rag_retrieve
+from src.rag.vector_store import PINECONE_METADATA_TEXT_KEY
+
+# ── 1. _is_substantive_chunk ──────────────────────────────────────────────────
+
+
+def test_substantive_chunk_accepts_normal_legal_text():
+    chunk = (
+        "Section 3(3) of the Law of Contract Act provides that no suit shall be "
+        "brought upon a contract for the disposition of an interest in land unless "
+        "the contract is in writing and signed by all parties thereto. This provision "
+        "requires strict compliance and has been interpreted broadly by Kenyan courts "
+        "to include agreements for sale, leases, and other dispositions of land."
+    )
+    assert _is_substantive_chunk(chunk) is True
+
+
+def test_substantive_chunk_rejects_arrangement_of_sections():
+    chunk = (
+        "CHAPTER 23\nLAW OF CONTRACT ACT\nARRANGEMENT OF SECTIONS\n"
+        "Section\n1. Short title.\n2. English law of contract to apply in Kenya.\n"
+        "3. Certain contracts to be in writing.\n4. Application of Indian Act."
+    )
+    assert _is_substantive_chunk(chunk) is False
+
+
+def test_substantive_chunk_rejects_arrangement_of_articles():
+    chunk = (
+        "THE CONSTITUTION OF KENYA, 2010\nARRANGEMENT OF ARTICLES\n"
+        "1—Sovereignty of the people.\n2—Supremacy of this Constitution."
+    )
+    assert _is_substantive_chunk(chunk) is False
+
+
+def test_substantive_chunk_rejects_kenyalaw_url():
+    chunk = (
+        "LAWS OF KENYA\nPublished by the National Council for Law Reporting\n"
+        "with the Authority of the Attorney-General\nwww.kenyalaw.org\n"
+        "Revised Edition 2012 [2002]"
+    )
+    assert _is_substantive_chunk(chunk) is False
+
+
+def test_substantive_chunk_rejects_national_council_boilerplate():
+    chunk = (
+        "National Council for Law Reporting\nwith the authority of the "
+        "Attorney-General as gazetted by the Government Printer"
+    )
+    assert _is_substantive_chunk(chunk) is False
+
+
+def test_substantive_chunk_rejects_creative_commons_boilerplate():
+    chunk = (
+        "This PDF copy is licensed under a Creative Commons Attribution "
+        "NonCommercial ShareAlike 4.0 License. FRBR URI: /akn/ke/act/1972/14."
+    )
+    assert _is_substantive_chunk(chunk) is False
+
+
+def test_substantive_chunk_rejects_toc_heavy_chunk():
+    # > 45% of lines are TOC entries
+    chunk = (
+        "LAND ACT, 2012\n"
+        "1—Short title.\n"
+        "2—Interpretation.\n"
+        "3—Application.\n"
+        "4—Guiding values and principles.\n"
+        "5—Forms of tenure.\n"
+        "6—Land management and administration.\n"
+        "7—Methods of acquisition of title to land."
+    )
+    assert _is_substantive_chunk(chunk) is False
+
+
+def test_substantive_chunk_rejects_dot_leader_toc():
+    chunk = (
+        "Contents\n"
+        "1. Short title .......................................................................  1\n"
+        "2. Application of Act ................................................................  1\n"
+        "3. Interpretation ....................................................................  2\n"
+        "4. Law applicable to succession .....................................................  4\n"
+        "Part II – WILLS ......................................................................  5\n"
+        "5. Persons capable of making wills ..................................................  5"
+    )
+    assert _is_substantive_chunk(chunk) is False
+
+
+def test_substantive_chunk_rejects_very_short_chunk():
+    # Under _MIN_CHUNK_WORDS
+    assert _is_substantive_chunk("CAP. 23\nL11 - 3\n[Rev. 2012]") is False
+
+
+def test_substantive_chunk_accepts_mixed_text_with_some_section_refs():
+    # Has a section reference but mostly prose — should not be rejected
+    chunk = (
+        "The court in Nairobi held that section 38 of the Land Act 2012 applies "
+        "to agreements for the sale of public land where part performance has been "
+        "demonstrated. The plaintiff had made substantial improvements to the land "
+        "and paid a deposit of Kshs 500,000. The court found that equity would "
+        "intervene to prevent the defendant from relying on the absence of a written "
+        "contract as a defence to the claim for specific performance."
+    )
+    assert _is_substantive_chunk(chunk) is True
+
+
+# ── 2. _source_filter_for_query ───────────────────────────────────────────────
+
+
+def test_source_filter_detects_land_act():
+    result = _source_filter_for_query("specific performance Land Act Kenya")
+    assert result == ["land_act_2012.txt"]
+
+
+def test_source_filter_detects_contract_act():
+    result = _source_filter_for_query("written contract law of contract act requirement")
+    assert result is not None
+    assert "contract_act_cap_23.txt" in result
+
+
+def test_source_filter_detects_employment_act():
+    result = _source_filter_for_query("unfair dismissal Employment Act Kenya")
+    assert result == ["employment_act_2007.txt"]
+
+
+def test_source_filter_detects_succession_act():
+    result = _source_filter_for_query("intestate succession act distribution of estate")
+    assert result == ["succession_act_cap_160.txt"]
+
+
+def test_source_filter_returns_none_for_generic_query():
+    result = _source_filter_for_query("breach of duty negligence damages")
+    assert result is None
+
+
+def test_source_filter_returns_multiple_sources_when_multiple_statutes_mentioned():
+    result = _source_filter_for_query("land act and law of contract act overlap")
+    assert result is not None
+    assert "land_act_2012.txt" in result
+    assert "contract_act_cap_23.txt" in result
+
+
+def test_source_filter_is_case_insensitive():
+    result = _source_filter_for_query("LAND ACT section 38 specific performance")
+    assert result == ["land_act_2012.txt"]
+
+
+def test_source_filter_no_false_positive_on_partial_word_match():
+    # "contract action" contains the substring "contract act" but is NOT a statute name
+    result = _source_filter_for_query("breach of contract action for damages")
+    assert result is None
+
+
+# ── 3. Score threshold ────────────────────────────────────────────────────────
+
+
+def _scored_index_mock(docs_with_scores: list[tuple[str, float]]):
+    """Pinecone index mock returning matches with explicit score attributes."""
+    matches = []
+    for text, score in docs_with_scores:
+        m = MagicMock()
+        m.score = score
+        m.metadata = {PINECONE_METADATA_TEXT_KEY: text}
+        matches.append(m)
+    idx = MagicMock()
+    idx.query.return_value = MagicMock(matches=matches)
+    return idx
+
+
+async def test_score_threshold_drops_low_score_matches():
+    idx = _scored_index_mock([("High score chunk.", 0.85), ("Low score chunk.", 0.55)])
+    with (
+        patch("src.rag.retriever._openai") as mock_openai,
+        patch("src.rag.retriever.pinecone_configured", return_value=True),
+        patch("src.rag.retriever.get_pinecone_index", return_value=idx),
+        patch("src.rag.retriever.expand_query", new=AsyncMock(side_effect=lambda q: [q])),
+        patch("src.rag.retriever.judge_chunks", new=AsyncMock(side_effect=lambda q, c, **kw: c)),
+        patch("src.rag.retriever.compress_chunks", new=AsyncMock(side_effect=lambda q, c: c)),
+    ):
+        mock_openai.embeddings.create = AsyncMock(
+            return_value=MagicMock(data=[MagicMock(embedding=[0.1] * 1536)])
+        )
+        result = await rag_retrieve("some query")
+    assert "High score chunk." in result
+    assert "Low score chunk." not in result
+
+
+async def test_score_threshold_accepts_match_exactly_at_threshold():
+    idx = _scored_index_mock([("Borderline chunk.", 0.70)])
+    with (
+        patch("src.rag.retriever._openai") as mock_openai,
+        patch("src.rag.retriever.pinecone_configured", return_value=True),
+        patch("src.rag.retriever.get_pinecone_index", return_value=idx),
+        patch("src.rag.retriever.expand_query", new=AsyncMock(side_effect=lambda q: [q])),
+        patch("src.rag.retriever.judge_chunks", new=AsyncMock(side_effect=lambda q, c, **kw: c)),
+        patch("src.rag.retriever.compress_chunks", new=AsyncMock(side_effect=lambda q, c: c)),
+    ):
+        mock_openai.embeddings.create = AsyncMock(
+            return_value=MagicMock(data=[MagicMock(embedding=[0.1] * 1536)])
+        )
+        result = await rag_retrieve("some query")
+    assert "Borderline chunk." in result
+
+
+async def test_score_threshold_treats_none_score_as_passing():
+    """A match with score=None must not raise — it should be treated as passing."""
+    idx = MagicMock()
+    m = MagicMock()
+    m.score = None
+    m.metadata = {PINECONE_METADATA_TEXT_KEY: "Chunk with null score."}
+    idx.query.return_value = MagicMock(matches=[m])
+    with (
+        patch("src.rag.retriever._openai") as mock_openai,
+        patch("src.rag.retriever.pinecone_configured", return_value=True),
+        patch("src.rag.retriever.get_pinecone_index", return_value=idx),
+        patch("src.rag.retriever.expand_query", new=AsyncMock(side_effect=lambda q: [q])),
+        patch("src.rag.retriever.judge_chunks", new=AsyncMock(side_effect=lambda q, c, **kw: c)),
+        patch("src.rag.retriever.compress_chunks", new=AsyncMock(side_effect=lambda q, c: c)),
+    ):
+        mock_openai.embeddings.create = AsyncMock(
+            return_value=MagicMock(data=[MagicMock(embedding=[0.1] * 1536)])
+        )
+        result = await rag_retrieve("some query")
+    assert result == ["Chunk with null score."]
+
+
+async def test_score_threshold_drops_all_below_threshold_returns_empty():
+    idx = _scored_index_mock([("Bad chunk 1.", 0.50), ("Bad chunk 2.", 0.60)])
+    with (
+        patch("src.rag.retriever._openai") as mock_openai,
+        patch("src.rag.retriever.pinecone_configured", return_value=True),
+        patch("src.rag.retriever.get_pinecone_index", return_value=idx),
+        patch("src.rag.retriever.expand_query", new=AsyncMock(side_effect=lambda q: [q])),
+        patch("src.rag.retriever.judge_chunks", new=AsyncMock(side_effect=lambda q, c, **kw: c)),
+        patch("src.rag.retriever.compress_chunks", new=AsyncMock(side_effect=lambda q, c: c)),
+    ):
+        mock_openai.embeddings.create = AsyncMock(
+            return_value=MagicMock(data=[MagicMock(embedding=[0.1] * 1536)])
+        )
+        result = await rag_retrieve("some query")
+    assert result == []
+
+
+# ── 4. judge_chunks ───────────────────────────────────────────────────────────
+
+
+def _judge_mock(indices: list[int]):
+    mock_result = MagicMock()
+    mock_result.selected_indices = indices
+    mock_client = MagicMock()
+    mock_client.chat.completions.create = AsyncMock(return_value=mock_result)
+    return mock_client
+
+
+async def test_judge_chunks_returns_selected_chunks_in_order():
+    chunks = ["Chunk A.", "Chunk B.", "Chunk C.", "Chunk D."]
+    with patch("src.rag.reranker.instructor") as mock_instr:
+        mock_instr.from_openai.return_value = _judge_mock([2, 0])
+        mock_instr.Mode.JSON = "json"
+        result = await judge_chunks("some case", chunks)
+    assert result == ["Chunk C.", "Chunk A."]
+
+
+async def test_judge_chunks_deduplicates_repeated_indices():
+    chunks = ["Chunk A.", "Chunk B.", "Chunk C."]
+    with patch("src.rag.reranker.instructor") as mock_instr:
+        mock_instr.from_openai.return_value = _judge_mock([0, 0, 1])
+        mock_instr.Mode.JSON = "json"
+        result = await judge_chunks("case", chunks)
+    assert result == ["Chunk A.", "Chunk B."]
+
+
+async def test_judge_chunks_filters_out_of_range_indices():
+    chunks = ["A.", "B."]
+    with patch("src.rag.reranker.instructor") as mock_instr:
+        mock_instr.from_openai.return_value = _judge_mock([0, 99, 1])
+        mock_instr.Mode.JSON = "json"
+        result = await judge_chunks("case", chunks)
+    assert result == ["A.", "B."]
+
+
+async def test_judge_chunks_returns_all_chunks_on_llm_failure():
+    chunks = ["Chunk A.", "Chunk B.", "Chunk C."]
+    with patch("src.rag.reranker.instructor") as mock_instr:
+        mock_instr.from_openai.return_value = MagicMock(
+            chat=MagicMock(
+                completions=MagicMock(create=AsyncMock(side_effect=Exception("LLM down")))
+            )
+        )
+        mock_instr.Mode.JSON = "json"
+        result = await judge_chunks("case", chunks)
+    assert result == chunks
+
+
+async def test_judge_chunks_empty_input_returns_empty():
+    with patch("src.rag.reranker.instructor"):
+        result = await judge_chunks("case", [])
+    assert result == []
+
+
+async def test_judge_chunks_target_is_sent_to_llm():
+    """The target value must appear in the system prompt sent to the LLM."""
+    chunks = ["Chunk A.", "Chunk B."]
+    with patch("src.rag.reranker.instructor") as mock_instr:
+        mock_client = MagicMock()
+        mock_client.chat.completions.create = AsyncMock(
+            return_value=MagicMock(selected_indices=[0])
+        )
+        mock_instr.from_openai.return_value = mock_client
+        mock_instr.Mode.JSON = "json"
+        await judge_chunks("case", chunks, target=10)
+
+    call_messages = mock_client.chat.completions.create.call_args.kwargs["messages"]
+    system_content = call_messages[0]["content"]
+    assert "Aim for 10 indices" in system_content
+
+
+async def test_judge_chunks_can_return_more_than_target_when_warranted():
+    chunks = [f"Chunk {i}." for i in range(10)]
+    with patch("src.rag.reranker.instructor") as mock_instr:
+        mock_instr.from_openai.return_value = _judge_mock(list(range(8)))
+        mock_instr.Mode.JSON = "json"
+        result = await judge_chunks("complex multi-issue case", chunks, target=6)
+    assert len(result) == 8
+
+
+# ── 5. compress_chunks ────────────────────────────────────────────────────────
+
+
+def _compress_mock(texts: list[str]):
+    """instructor client mock that returns successive compressed texts."""
+    results = [MagicMock(relevant_text=t) for t in texts]
+    mock_client = MagicMock()
+    mock_client.chat.completions.create = AsyncMock(side_effect=results)
+    return mock_client
+
+
+async def test_compress_chunks_returns_compressed_text():
+    chunks = ["Long chunk with irrelevant preamble. Relevant sentence here.", "Another chunk."]
+    compressed = ["Relevant sentence here.", "Another chunk."]
+    with patch("src.rag.reranker.instructor") as mock_instr:
+        mock_instr.from_openai.return_value = _compress_mock(compressed)
+        mock_instr.Mode.JSON = "json"
+        result = await compress_chunks("case text", chunks)
+    assert result == compressed
+
+
+async def test_compress_chunks_drops_empty_compression_results():
+    chunks = ["Relevant chunk.", "Irrelevant chunk — nothing useful here."]
+    compressed = ["Relevant chunk.", ""]
+    with patch("src.rag.reranker.instructor") as mock_instr:
+        mock_instr.from_openai.return_value = _compress_mock(compressed)
+        mock_instr.Mode.JSON = "json"
+        result = await compress_chunks("case text", chunks)
+    assert result == ["Relevant chunk."]
+
+
+async def test_compress_chunks_falls_back_to_original_on_individual_failure():
+    chunks = ["Chunk A.", "Chunk B."]
+    with patch("src.rag.reranker.instructor") as mock_instr:
+        mock_client = MagicMock()
+        mock_client.chat.completions.create = AsyncMock(
+            side_effect=[MagicMock(relevant_text="Compressed A."), Exception("API error")]
+        )
+        mock_instr.from_openai.return_value = mock_client
+        mock_instr.Mode.JSON = "json"
+        result = await compress_chunks("case text", chunks)
+    assert result[0] == "Compressed A."
+    assert result[1] == "Chunk B."
+
+
+async def test_compress_chunks_runs_all_compressions_in_parallel():
+    chunks = ["A.", "B.", "C."]
+    call_count = {"n": 0}
+
+    async def _side_effect(*args, **kwargs):
+        call_count["n"] += 1
+        return MagicMock(relevant_text="compressed")
+
+    with patch("src.rag.reranker.instructor") as mock_instr:
+        mock_client = MagicMock()
+        mock_client.chat.completions.create = AsyncMock(side_effect=_side_effect)
+        mock_instr.from_openai.return_value = mock_client
+        mock_instr.Mode.JSON = "json"
+        result = await compress_chunks("case", chunks)
+    assert call_count["n"] == 3
+    assert len(result) == 3
+
+
+async def test_compress_chunks_empty_input_returns_empty():
+    with patch("src.rag.reranker.instructor"):
+        result = await compress_chunks("case", [])
+    assert result == []
+
+
+# ── 6. rag_retrieve integration ───────────────────────────────────────────────
+
+
+def _index_mock_for_docs(texts: list[str], score: float = 0.85):
+    matches = []
+    for t in texts:
+        m = MagicMock()
+        m.score = score
+        m.metadata = {PINECONE_METADATA_TEXT_KEY: t}
+        matches.append(m)
+    idx = MagicMock()
+    idx.query.return_value = MagicMock(matches=matches)
+    return idx
+
+
+def _embed_mock():
+    return AsyncMock(return_value=MagicMock(data=[MagicMock(embedding=[0.1] * 1536)]))
+
+
+async def test_rag_retrieve_calls_judge_with_deduplicated_candidates():
+    """judge_chunks receives the post-dedup candidate list, not raw Pinecone results."""
+    idx = _index_mock_for_docs(["Chunk A.", "Chunk B."])
+    judge_spy = AsyncMock(side_effect=lambda q, c, **kw: c)
+
+    with (
+        patch("src.rag.retriever._openai") as mock_openai,
+        patch("src.rag.retriever.pinecone_configured", return_value=True),
+        patch("src.rag.retriever.get_pinecone_index", return_value=idx),
+        patch("src.rag.retriever.expand_query", new=AsyncMock(side_effect=lambda q: [q])),
+        patch("src.rag.retriever.judge_chunks", new=judge_spy),
+        patch("src.rag.retriever.compress_chunks", new=AsyncMock(side_effect=lambda q, c: c)),
+    ):
+        mock_openai.embeddings.create = _embed_mock()
+        await rag_retrieve("case text")
+
+    assert judge_spy.called
+    _, call_chunks = judge_spy.call_args.args
+    assert call_chunks == ["Chunk A.", "Chunk B."]
+
+
+async def test_rag_retrieve_calls_compress_with_judge_output():
+    """compress_chunks receives whatever judge_chunks returned."""
+    idx = _index_mock_for_docs(["Chunk A.", "Chunk B.", "Chunk C."])
+    compress_spy = AsyncMock(side_effect=lambda q, c: c)
+
+    with (
+        patch("src.rag.retriever._openai") as mock_openai,
+        patch("src.rag.retriever.pinecone_configured", return_value=True),
+        patch("src.rag.retriever.get_pinecone_index", return_value=idx),
+        patch("src.rag.retriever.expand_query", new=AsyncMock(side_effect=lambda q: [q])),
+        patch("src.rag.retriever.judge_chunks", new=AsyncMock(return_value=["Chunk A."])),
+        patch("src.rag.retriever.compress_chunks", new=compress_spy),
+    ):
+        mock_openai.embeddings.create = _embed_mock()
+        await rag_retrieve("case text")
+
+    _, call_chunks = compress_spy.call_args.args
+    assert call_chunks == ["Chunk A."]
+
+
+async def test_rag_retrieve_final_result_is_compress_output():
+    """The value returned by compress_chunks is what rag_retrieve returns."""
+    idx = _index_mock_for_docs(["Raw chunk."])
+    final = ["Compressed and relevant sentence."]
+
+    with (
+        patch("src.rag.retriever._openai") as mock_openai,
+        patch("src.rag.retriever.pinecone_configured", return_value=True),
+        patch("src.rag.retriever.get_pinecone_index", return_value=idx),
+        patch("src.rag.retriever.expand_query", new=AsyncMock(side_effect=lambda q: [q])),
+        patch("src.rag.retriever.judge_chunks", new=AsyncMock(side_effect=lambda q, c, **kw: c)),
+        patch("src.rag.retriever.compress_chunks", new=AsyncMock(return_value=final)),
+    ):
+        mock_openai.embeddings.create = _embed_mock()
+        result = await rag_retrieve("case text")
+
+    assert result == final
+
+
+async def test_rag_retrieve_skips_judge_and_compress_when_no_candidates():
+    """If all Pinecone matches are below the score threshold, judge/compress are not called."""
+    idx = _scored_index_mock([("Low score.", 0.50)])
+    judge_spy = AsyncMock(side_effect=lambda q, c, **kw: c)
+    compress_spy = AsyncMock(side_effect=lambda q, c: c)
+
+    with (
+        patch("src.rag.retriever._openai") as mock_openai,
+        patch("src.rag.retriever.pinecone_configured", return_value=True),
+        patch("src.rag.retriever.get_pinecone_index", return_value=idx),
+        patch("src.rag.retriever.expand_query", new=AsyncMock(side_effect=lambda q: [q])),
+        patch("src.rag.retriever.judge_chunks", new=judge_spy),
+        patch("src.rag.retriever.compress_chunks", new=compress_spy),
+    ):
+        mock_openai.embeddings.create = AsyncMock(
+            return_value=MagicMock(data=[MagicMock(embedding=[0.1] * 1536)])
+        )
+        result = await rag_retrieve("case text")
+
+    assert result == []
+    judge_spy.assert_not_called()
+    compress_spy.assert_not_called()
+
+
+async def test_rag_retrieve_applies_statute_filter_when_statute_detected():
+    """Pinecone query must include source filter when a statute name is in the query."""
+    idx = _index_mock_for_docs(["Land Act chunk."])
+    with (
+        patch("src.rag.retriever._openai") as mock_openai,
+        patch("src.rag.retriever.pinecone_configured", return_value=True),
+        patch("src.rag.retriever.get_pinecone_index", return_value=idx),
+        patch("src.rag.retriever.expand_query", new=AsyncMock(side_effect=lambda q: [q])),
+        patch("src.rag.retriever.judge_chunks", new=AsyncMock(side_effect=lambda q, c, **kw: c)),
+        patch("src.rag.retriever.compress_chunks", new=AsyncMock(side_effect=lambda q, c: c)),
+    ):
+        mock_openai.embeddings.create = _embed_mock()
+        await rag_retrieve("specific performance Land Act Kenya")
+
+    call_kwargs = idx.query.call_args.kwargs
+    assert "filter" in call_kwargs
+    assert call_kwargs["filter"] == {"source": {"$in": ["land_act_2012.txt"]}}
+
+
+async def test_rag_retrieve_no_statute_filter_for_generic_query():
+    """Pinecone query must NOT include a source filter for generic legal queries."""
+    idx = _index_mock_for_docs(["Some chunk."])
+    with (
+        patch("src.rag.retriever._openai") as mock_openai,
+        patch("src.rag.retriever.pinecone_configured", return_value=True),
+        patch("src.rag.retriever.get_pinecone_index", return_value=idx),
+        patch("src.rag.retriever.expand_query", new=AsyncMock(side_effect=lambda q: [q])),
+        patch("src.rag.retriever.judge_chunks", new=AsyncMock(side_effect=lambda q, c, **kw: c)),
+        patch("src.rag.retriever.compress_chunks", new=AsyncMock(side_effect=lambda q, c: c)),
+    ):
+        mock_openai.embeddings.create = _embed_mock()
+        await rag_retrieve("breach of duty negligence damages")
+
+    call_kwargs = idx.query.call_args.kwargs
+    assert "filter" not in call_kwargs

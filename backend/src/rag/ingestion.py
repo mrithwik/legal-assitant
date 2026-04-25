@@ -8,6 +8,7 @@ Requires PINECONE_* and OPENAI_API_KEY (see .env.example).
 """
 
 import asyncio
+import re
 import uuid
 from pathlib import Path
 
@@ -25,6 +26,56 @@ CHUNK_SIZE = 800
 CHUNK_OVERLAP = 100
 _EMBED_BATCH_SIZE = 256
 _PINECONE_UPSERT_BATCH = 100
+
+# ── Substantive-chunk filter ───────────────────────────────────────────────────
+# Kenyan legal documents all share the same publisher header + ARRANGEMENT OF
+# SECTIONS table-of-contents structure. These blocks produce chunks that embed
+# superficially well but contain no usable legal substance. Filtering them at
+# ingest time keeps the Pinecone index clean.
+
+_BOILERPLATE_EXACT = frozenset({
+    "ARRANGEMENT OF SECTIONS",
+    "ARRANGEMENT OF ARTICLES",
+})
+
+_BOILERPLATE_CONTAINS = (
+    "www.kenyalaw.org",
+    "National Council for Law Reporting",
+    "Creative Commons",
+    "FRBR URI",
+)
+
+# TOC entry: "1. Short title", "1—Short title", "1 – Short title", with any dash variant
+_TOC_ENTRY_RE = re.compile(r"^\s*\d+[A-Z]?[\.\-—―–]\s*\S")
+# Part header: "PART I", "PART II", "Part I" etc.
+_PART_HEADER_RE = re.compile(r"^\s*PART\s+[IVX\d]+", re.IGNORECASE)
+# Dot-leader line: "Short title .......................................... 5"
+_DOT_LEADER_RE = re.compile(r"\.{4,}")
+
+_MIN_CHUNK_WORDS = 25
+_MAX_TOC_LINE_RATIO = 0.45
+
+
+def _is_substantive_chunk(chunk: str) -> bool:
+    """Return False for table-of-contents, publisher header, and boilerplate chunks."""
+    for phrase in _BOILERPLATE_EXACT:
+        if phrase in chunk:
+            return False
+    for phrase in _BOILERPLATE_CONTAINS:
+        if phrase in chunk:
+            return False
+    if len(chunk.split()) < _MIN_CHUNK_WORDS:
+        return False
+    lines = [ln for ln in chunk.splitlines() if ln.strip()]
+    if not lines:
+        return False
+    toc_count = sum(
+        1 for ln in lines
+        if _TOC_ENTRY_RE.match(ln)
+        or _PART_HEADER_RE.match(ln)
+        or _DOT_LEADER_RE.search(ln)
+    )
+    return toc_count / len(lines) <= _MAX_TOC_LINE_RATIO
 
 
 def chunk_text(text: str, size: int = CHUNK_SIZE, overlap: int = CHUNK_OVERLAP) -> list[str]:
@@ -60,7 +111,7 @@ async def _ingest_documents_async(raw_dir: Path = RAW_DIR) -> dict:
 
     for fpath in txt_files:
         text = fpath.read_text(encoding="utf-8", errors="replace")
-        file_chunks = chunk_text(text)
+        file_chunks = [c for c in chunk_text(text) if _is_substantive_chunk(c)]
         for i, chunk in enumerate(file_chunks):
             all_docs.append(chunk)
             all_ids.append(f"{fpath.stem}_{i}_{uuid.uuid4().hex[:6]}")
