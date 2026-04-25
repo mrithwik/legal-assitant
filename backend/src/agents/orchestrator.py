@@ -18,7 +18,6 @@ import asyncio
 import json
 import uuid
 from collections.abc import AsyncGenerator
-from typing import Any
 
 from openai import APIConnectionError, APITimeoutError, RateLimitError
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -124,56 +123,34 @@ async def run_pipeline(
     logger.info("pipeline_start", case_id=case_id, user_id=user_id, title=request.title)
 
     try:
-        # Steps 0 & 1 -- Extraction + RAG retrieval run in parallel.
-        # Both only need raw_case_text as input so there is no dependency
-        # between them. asyncio.gather() races the LLM work simultaneously,
-        # reducing total latency to max(extraction_time, rag_time) instead of
-        # their sum. DB updates are done sequentially after both complete to
-        # avoid concurrent access on the shared AsyncSession.
-
-        # Register both steps in DB before parallel work begins
-        extraction_step = await _start_step(db, case, "extraction", 0)
-        rag_step = await _start_step(db, case, "rag_retrieval", 1)
-
-        # FEATURE 1: Parallel execution — both coroutines race simultaneously.
-        # return_exceptions=True means a failure in one doesn't cancel the other;
-        # instead the exception is returned as the result and handled below.
-        # asyncio.gather() with return_exceptions=True returns Sequence[object], so
-        # we use Any here — isinstance checks below narrow the types safely.
-        gather_results: tuple[Any, Any] = await asyncio.gather(
-            asyncio.wait_for(                          # extraction: ~15s
+        # Step 0 -- Extraction
+        step = await _start_step(db, case, "extraction", 0)
+        try:
+            extraction = await asyncio.wait_for(
                 _run_with_retry(run_extraction_agent, request.raw_case_text),
                 timeout=settings.agent_step_timeout_seconds,
-            ),
-            asyncio.wait_for(                          # RAG retrieval: ~5s — runs while extraction is in flight
+            )
+        except Exception:
+            await _fail_step(db, step)
+            raise
+        await _finish_step(db, step, extraction.model_dump())
+        logger.info("step_complete", case_id=case_id, step="extraction")
+        yield _markdown_section("extraction", "Fact extraction", extraction_to_markdown(extraction))
+
+        # Step 1 -- RAG retrieval (non-critical: continue on failure)
+        step = await _start_step(db, case, "rag_retrieval", 1)
+        try:
+            chunks = await asyncio.wait_for(
                 rag_retrieve(request.raw_case_text),
                 timeout=settings.agent_step_timeout_seconds,
-            ),
-            return_exceptions=True,
-        )
-        extraction_result: Any = gather_results[0]
-        rag_result: Any = gather_results[1]
-
-        # DB updates run sequentially after both complete — AsyncSession is not concurrency-safe.
-        # Extraction is critical: failure aborts the pipeline.
-        if isinstance(extraction_result, BaseException):
-            await _fail_step(db, extraction_step)
-            raise extraction_result
-        extraction = extraction_result
-        await _finish_step(db, extraction_step, extraction.model_dump())
-        logger.info("step_complete", case_id=case_id, step="extraction")
-
-        # RAG is non-critical: failure falls back to empty chunks so pipeline continues.
-        if isinstance(rag_result, BaseException):
-            logger.warning("rag_retrieval_failed", case_id=case_id, reason=str(rag_result))
-            chunks: list[str] = []
-            await _fail_step(db, rag_step)
+            )
+        except Exception as exc:
+            logger.warning("rag_retrieval_failed", case_id=case_id, reason=str(exc))
+            chunks = []
+            await _fail_step(db, step)
         else:
-            chunks = rag_result
-            await _finish_step(db, rag_step, {"chunks": chunks})
+            await _finish_step(db, step, {"chunks": chunks})
             logger.info("step_complete", case_id=case_id, step="rag_retrieval", chunks=len(chunks))
-
-        yield _markdown_section("extraction", "Fact extraction", extraction_to_markdown(extraction))
         yield _markdown_section(
             "rag_retrieval",
             "Precedent retrieval",
