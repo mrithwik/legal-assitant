@@ -328,7 +328,7 @@ async def test_judge_chunks_target_is_sent_to_llm():
 
     call_messages = mock_client.chat.completions.create.call_args.kwargs["messages"]
     system_content = call_messages[0]["content"]
-    assert "10" in system_content
+    assert "Aim for 10 indices" in system_content
 
 
 async def test_judge_chunks_can_return_more_than_target_when_warranted():
