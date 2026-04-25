@@ -88,6 +88,9 @@ async def judge_chunks(case_text: str, chunks: list[str], target: int = 6) -> li
         # dict.fromkeys preserves order while deduplicating any repeated indices
         indices = list(dict.fromkeys(i for i in result.selected_indices if 0 <= i < len(chunks)))
         selected = [chunks[i] for i in indices]
+        if not selected:
+            logger.warning("rerank_judge_empty", fallback="all_chunks")
+            return chunks
     except Exception as exc:
         logger.warning("rerank_judge_failed", reason=str(exc), fallback="all_chunks")
         return chunks

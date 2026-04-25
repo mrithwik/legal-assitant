@@ -33,7 +33,7 @@ logger = get_logger(__name__)
 _openai = get_async_client()
 
 _DEFAULT_N_RESULTS = 5
-_SCORE_THRESHOLD = 0.70
+_SCORE_THRESHOLD = 0.60
 
 # Maps lowercase keyword phrases found in expanded queries to their source
 # filenames in the Pinecone index.  Includes explicit Act names, common
