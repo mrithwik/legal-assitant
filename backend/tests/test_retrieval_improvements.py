@@ -202,7 +202,7 @@ async def test_score_threshold_drops_low_score_matches():
 
 
 async def test_score_threshold_accepts_match_exactly_at_threshold():
-    idx = _scored_index_mock([("Borderline chunk.", 0.70)])
+    idx = _scored_index_mock([("Borderline chunk.", 0.60)])
     with (
         patch("src.rag.retriever._openai") as mock_openai,
         patch("src.rag.retriever.pinecone_configured", return_value=True),
@@ -241,7 +241,7 @@ async def test_score_threshold_treats_none_score_as_passing():
 
 
 async def test_score_threshold_drops_all_below_threshold_returns_empty():
-    idx = _scored_index_mock([("Bad chunk 1.", 0.50), ("Bad chunk 2.", 0.60)])
+    idx = _scored_index_mock([("Bad chunk 1.", 0.50), ("Bad chunk 2.", 0.55)])
     with (
         patch("src.rag.retriever._openai") as mock_openai,
         patch("src.rag.retriever.pinecone_configured", return_value=True),
@@ -329,6 +329,16 @@ async def test_judge_chunks_target_is_sent_to_llm():
     call_messages = mock_client.chat.completions.create.call_args.kwargs["messages"]
     system_content = call_messages[0]["content"]
     assert "Aim for 10 indices" in system_content
+
+
+async def test_judge_chunks_returns_all_chunks_when_llm_returns_empty_indices():
+    """If the LLM returns no selected indices, fall back to all input chunks."""
+    chunks = ["Chunk A.", "Chunk B.", "Chunk C."]
+    with patch("src.rag.reranker.instructor") as mock_instr:
+        mock_instr.from_openai.return_value = _judge_mock([])
+        mock_instr.Mode.JSON = "json"
+        result = await judge_chunks("case", chunks)
+    assert result == chunks
 
 
 async def test_judge_chunks_can_return_more_than_target_when_warranted():
