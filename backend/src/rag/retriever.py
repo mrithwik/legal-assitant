@@ -35,10 +35,12 @@ _openai = get_async_client()
 _DEFAULT_N_RESULTS = 5
 _SCORE_THRESHOLD = 0.70
 
-# Maps lowercase statute keywords found in expanded queries to their source
-# filenames in the Pinecone index.  Only explicit statute names are listed —
-# general legal concepts (e.g. "negligence") are intentionally excluded to
-# avoid over-scoping searches that span multiple Acts.
+# Maps lowercase keyword phrases found in expanded queries to their source
+# filenames in the Pinecone index.  Includes explicit Act names, common
+# short-form references (e.g. "law of contract"), and well-known section
+# groupings (e.g. "bill of rights").  General legal concepts such as
+# "negligence" or "damages" are intentionally excluded to avoid
+# over-scoping searches that span multiple Acts.
 _STATUTE_MAP: dict[str, str] = {
     "arbitration act": "arbitration_act_cap49.txt",
     "civil procedure act": "civil_procedure_act_cap21.txt",

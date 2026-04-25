@@ -26,6 +26,7 @@ from src.core.openai_client import get_async_client
 logger = get_logger(__name__)
 
 _MODEL = "gpt-4o-mini"
+_MAX_COMPRESS_CONCURRENCY = 6
 
 _JUDGE_SYSTEM_TEMPLATE = """You are a senior Kenyan advocate reviewing retrieved legal text.
 
@@ -97,11 +98,16 @@ async def judge_chunks(case_text: str, chunks: list[str], target: int = 6) -> li
 
 
 async def _compress_one(
-    client: instructor.AsyncInstructor, case_text: str, chunk: str, index: int
+    client: instructor.AsyncInstructor,
+    semaphore: asyncio.Semaphore,
+    case_text: str,
+    chunk: str,
+    index: int,
 ) -> str:
     """Compress a single chunk to its relevant sentences. Returns original on failure."""
-    try:
-        result = await client.chat.completions.create(
+    async with semaphore:
+        try:
+            result = await client.chat.completions.create(
             model=_MODEL,
             response_model=_CompressResult,
             messages=[
@@ -109,11 +115,11 @@ async def _compress_one(
                 {"role": "user", "content": f"CASE:\n{case_text}\n\nCHUNK:\n{chunk}"},
             ],
             temperature=0.0,
-        )
-        return result.relevant_text.strip()
-    except Exception as exc:
-        logger.warning("rerank_compress_chunk_failed", index=index, reason=str(exc))
-        return chunk
+            )
+            return result.relevant_text.strip()
+        except Exception as exc:
+            logger.warning("rerank_compress_chunk_failed", index=index, reason=str(exc))
+            return chunk
 
 
 async def compress_chunks(case_text: str, chunks: list[str]) -> list[str]:
@@ -126,12 +132,13 @@ async def compress_chunks(case_text: str, chunks: list[str]) -> list[str]:
         return chunks
 
     client = instructor.from_openai(get_async_client(), mode=instructor.Mode.JSON)
+    semaphore = asyncio.Semaphore(_MAX_COMPRESS_CONCURRENCY)
 
     logger.info("rerank_compress_start", n_chunks=len(chunks))
     start = time.monotonic()
 
     results = await asyncio.gather(
-        *[_compress_one(client, case_text, chunk, i) for i, chunk in enumerate(chunks)],
+        *[_compress_one(client, semaphore, case_text, chunk, i) for i, chunk in enumerate(chunks)],
         return_exceptions=True,
     )
 
