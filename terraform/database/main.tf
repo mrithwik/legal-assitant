@@ -59,7 +59,7 @@ resource "aws_rds_cluster" "aurora" {
   cluster_identifier      = "litigation-db"
   engine                  = "aurora-postgresql"
   engine_mode             = "provisioned"
-  engine_version          = "15.4"
+  engine_version          = "15.12"
   database_name           = "litigation"
   master_username         = "postgres"
   master_password         = random_password.aurora.result

@@ -31,41 +31,28 @@ resource "aws_secretsmanager_secret_version" "frontend" {
   })
 }
 
-# 3. IAM Roles — gives App Runner permission to pull from ECR and read secrets
-resource "aws_iam_role" "apprunner_ecr" {
-  name = "apprunner-frontend-ecr-role"
+# 3. IAM Role — gives App Runner permission to pull from ECR and read secrets
+resource "aws_iam_role" "apprunner_service_role" {
+  name = "apprunner-frontend-service-role"
 
   assume_role_policy = jsonencode({
     Version = "2012-10-17"
     Statement = [{
       Effect    = "Allow"
-      Principal = { Service = "build.apprunner.amazonaws.com" }
+      Principal = { Service = ["build.apprunner.amazonaws.com", "tasks.apprunner.amazonaws.com"] }
       Action    = "sts:AssumeRole"
     }]
   })
 }
 
 resource "aws_iam_role_policy_attachment" "apprunner_ecr" {
-  role       = aws_iam_role.apprunner_ecr.name
+  role       = aws_iam_role.apprunner_service_role.name
   policy_arn = "arn:aws:iam::aws:policy/service-role/AWSAppRunnerServicePolicyForECRAccess"
-}
-
-resource "aws_iam_role" "apprunner_instance" {
-  name = "apprunner-frontend-instance-role"
-
-  assume_role_policy = jsonencode({
-    Version = "2012-10-17"
-    Statement = [{
-      Effect    = "Allow"
-      Principal = { Service = "tasks.apprunner.amazonaws.com" }
-      Action    = "sts:AssumeRole"
-    }]
-  })
 }
 
 resource "aws_iam_role_policy" "apprunner_secrets" {
   name = "apprunner-frontend-secrets-policy"
-  role = aws_iam_role.apprunner_instance.id
+  role = aws_iam_role.apprunner_service_role.id
 
   policy = jsonencode({
     Version = "2012-10-17"
@@ -83,7 +70,7 @@ resource "aws_apprunner_service" "frontend" {
 
   source_configuration {
     authentication_configuration {
-      access_role_arn = aws_iam_role.apprunner_ecr.arn
+      access_role_arn = aws_iam_role.apprunner_service_role.arn
     }
 
     image_repository {
@@ -92,6 +79,14 @@ resource "aws_apprunner_service" "frontend" {
 
       image_configuration {
         port = "3000"
+
+        runtime_environment_variables = {
+          NODE_ENV = "production"
+          # Without HOSTNAME=0.0.0.0, Next.js standalone binds to localhost only.
+          # App Runner health checks connect from outside the container and can't
+          # reach localhost, causing the service to fail on every deploy.
+          HOSTNAME = "0.0.0.0"
+        }
 
         runtime_environment_secrets = {
           CLERK_SECRET_KEY = "${aws_secretsmanager_secret.frontend.arn}:CLERK_SECRET_KEY::"
@@ -103,6 +98,10 @@ resource "aws_apprunner_service" "frontend" {
   }
 
   instance_configuration {
-    instance_role_arn = aws_iam_role.apprunner_instance.arn
+    cpu               = "1024"
+    memory            = "2048"
+    instance_role_arn = aws_iam_role.apprunner_service_role.arn
   }
+
+  depends_on = [aws_secretsmanager_secret_version.frontend]
 }
