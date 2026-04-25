@@ -636,3 +636,28 @@ async def test_extraction_failure_with_rag_success_still_aborts(client, mock_age
     assert "extraction" not in section_ids
     assert "strategy" not in section_ids
 
+
+async def test_extraction_failure_rag_step_not_left_processing(client, mock_agents):
+    """When extraction fails, the rag_retrieval step must reach a terminal status.
+
+    Both coroutines complete inside asyncio.gather() before we inspect results.
+    If we raise on extraction failure without finalizing rag_step, it stays
+    stuck in PROCESSING forever — this test guards against that regression.
+    """
+    mock_agents["extraction"].side_effect = RuntimeError("LLM timeout")
+    async with client.stream(
+        "POST", "/api/v1/analyze", data=ANALYZE_FORM_BODY, headers=HEADERS_A
+    ) as resp:
+        events = await collect_sse(resp)
+    assert events[-1].get("type") == "error"
+    # Retrieve the failed case — extraction failure sets case status to FAILED
+    history = (await client.get("/api/v1/cases", headers=HEADERS_A)).json()
+    assert len(history) == 1
+    case_id = history[0]["id"]
+    detail = (await client.get(f"/api/v1/cases/{case_id}", headers=HEADERS_A)).json()
+    rag_step = next((s for s in detail["steps"] if s["step_name"] == "rag_retrieval"), None)
+    assert rag_step is not None, "rag_retrieval step must exist in DB"
+    assert rag_step["status"] != "PROCESSING", (
+        f"rag_retrieval step must not be left in PROCESSING; got {rag_step['status']}"
+    )
+

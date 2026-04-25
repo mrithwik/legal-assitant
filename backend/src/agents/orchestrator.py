@@ -152,8 +152,16 @@ async def run_pipeline(
         rag_result: Any = gather_results[1]
 
         # Extraction is critical — failure aborts the whole pipeline.
+        # But RAG has already completed (gather() awaited both), so finalize
+        # rag_step before raising so no started step is left stuck in PROCESSING.
         if isinstance(extraction_result, BaseException):
             await _fail_step(db, extraction_step)
+            if isinstance(rag_result, BaseException):
+                logger.warning("rag_retrieval_failed", case_id=case_id, reason=str(rag_result))
+                await _fail_step(db, rag_step)
+            else:
+                await _finish_step(db, rag_step, {"chunks": rag_result})
+                logger.info("step_complete", case_id=case_id, step="rag_retrieval", chunks=len(rag_result))
             raise extraction_result
         extraction = extraction_result
         await _finish_step(db, extraction_step, extraction.model_dump())
