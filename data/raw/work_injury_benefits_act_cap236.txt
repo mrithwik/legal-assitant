@@ -1,0 +1,1159 @@
+LAWS OF KENYA
+THE WORK INJURY BENEFITS ACT
+CAP. 236
+Revised and published by the National Council for Law Reporting
+with the authority of the Attorney-General as gazetted by the Government Printer
+www.kenyalaw.org
+Kenya
+Work Injury Benefits Act
+Cap. 236
+Legislation as at 31 December 2022
+By Kenya Law and Laws.Africa. Share widely and freely.
+www.kenyalaw.org | info@kenyalaw.org
+FRBR URI: /akn/ke/act/2007/13/eng@2022-12-31
+There is no copyright on the legislative content of this document.
+This PDF copy is licensed under a Creative Commons Attribution NonCommercial ShareAlike 4.0 License (CC BY-NCSA 4.0). This license enables reusers to distribute, remix, adapt, and build upon the material in any medium or format
+for noncommercial purposes only, and only so long as attribution is given to the creator. If you remix, adapt, or build
+upon the material, you must license the modified material under identical terms. CC BY-NC-SA includes the following
+elements:
+• BY: credit must be given to the creator.
+• NC: Only noncommercial uses of the work are permitted.
+• SA: Adaptations must be shared under the same terms.
+Share widely and freely.
+Work Injury Benefits Act (Cap. 236)
+Contents
+Part I – PRELIMINARY ....................................................................................................................................................................................... 1
+1. Short title .................................................................................................................................................................................................... 1
+2. Interpretation ............................................................................................................................................................................................. 1
+3. Application .................................................................................................................................................................................................. 2
+4. Meaning of employer ............................................................................................................................................................................. 2
+5. Meaning of "employee" .......................................................................................................................................................................... 2
+6. Meaning of dependant ........................................................................................................................................................................... 3
+Part II – OBLIGATIONS OF EMPLOYERS ..................................................................................................................................................... 3
+7. Employer to be insured .......................................................................................................................................................................... 3
+8. Registration of employer ....................................................................................................................................................................... 3
+9. Employer to keep records ..................................................................................................................................................................... 4
+Part III – RIGHT TO COMPENSATION .......................................................................................................................................................... 4
+10. Right to compensation ........................................................................................................................................................................ 4
+11. Accident outside Kenya ....................................................................................................................................................................... 5
+12. Accidents during training for or performance of emergency Services ............................................................................... 5
+13. Special circumstances in which Director may refuse award ................................................................................................. 5
+14. Special circumstances in which the Director may order compensation ............................................................................ 5
+15. Employee requiring constant assistance ....................................................................................................................................... 5
+16. Substitution of compensation for other legal remedies ......................................................................................................... 6
+17. Claims against third parties ............................................................................................................................................................... 6
+18. Threats and compulsion ..................................................................................................................................................................... 6
+19. Compensation not to be alienated ................................................................................................................................................. 6
+20. Compensation not to form part of deceased employee’s estate .......................................................................................... 7
+Part IV – REPORTING OF ACCIDENTS .......................................................................................................................................................... 7
+21. Notice of accident by employee to employer ............................................................................................................................. 7
+22. Notice of injury or accident by employer to Director .............................................................................................................. 7
+23. Inquiry by Director ................................................................................................................................................................................ 7
+24. Particulars in support of claim ........................................................................................................................................................ 7
+25. Employee to submit to medical examination ............................................................................................................................. 8
+26. Claim for compensation ...................................................................................................................................................................... 8
+27. Lapse of right to benefits ................................................................................................................................................................... 8
+Part V – COMPENSATION ................................................................................................................................................................................. 9
+28. Compensation for temporary total or partial disablement .................................................................................................... 9
+29. Expiry of compensation for temporary total or partial disablement .................................................................................. 9
+30. Compensation for permanent disablement ................................................................................................................................. 9
+31. Amendment of First Schedule ....................................................................................................................................................... 10
+32. Compensation for permanent disablement of employee in training ............................................................................... 10
+33. Compensation to employee previously in receipt of compensation ................................................................................. 10
+34. Amount of compensation in case of death ............................................................................................................................... 10
+35. Amendment of Third Schedule ...................................................................................................................................................... 11
+36. Payment of compensation ............................................................................................................................................................... 11
+37. Manner of calculating earnings ..................................................................................................................................................... 11
+Part VI – OCCUPATIONAL DISEASES ......................................................................................................................................................... 12
+38. Compensation in respect of scheduled and unscheduled diseases .................................................................................. 12
+39. Presumption regarding cause of occupational disease ......................................................................................................... 12
+40. Calculation of compensation .......................................................................................................................................................... 13
+41. Notice of occupational disease by employee and employer ............................................................................................... 13
+42. Date of occupational disease ......................................................................................................................................................... 13
+43. Amendment of Second Schedule .................................................................................................................................................. 13
+44. Appointment of medical advisory panels .................................................................................................................................. 13
+Part VII – MEDICAL AID .................................................................................................................................................................................. 14
+45. First Aid .................................................................................................................................................................................................. 14
+46. Conveyance of injured worker ........................................................................................................................................................ 14
+47. Medical expenses ................................................................................................................................................................................ 14
+48. Submission of medical report ........................................................................................................................................................ 15
+49. Fees for medical aid to be prescribed ........................................................................................................................................ 15
+50. Contributions by employees towards cost of medical aid prohibited .............................................................................. 15
+Part VIII – APPEALS ......................................................................................................................................................................................... 15
+51. Objections and appeals against decisions of the Director .................................................................................................. 15
+52. Director’s reply ..................................................................................................................................................................................... 15
+Part IX – MISCELLANEOUS PROVISIONS ................................................................................................................................................. 15
+53. Director ................................................................................................................................................................................................... 15
+54. False statements ................................................................................................................................................................................. 16
+55. General penalty ................................................................................................................................................................................... 16
+56. Regulations ............................................................................................................................................................................................ 16
+57. [Spent] ...................................................................................................................................................................................................... 17
+58. Savings .................................................................................................................................................................................................... 17
+FIRST SCHEDULE [s. 30] ................................................................................................................................................................................. 17
+SECOND SCHEDULE [s. 38(1)] ....................................................................................................................................................................... 23
+THIRD SCHEDULE [ss. 30, 34, 35, 36] ....................................................................................................................................................... 27
+Work Injury Benefits Act (Cap. 236) Kenya
+WORK INJURY BENEFITS ACT
+CAP. 236
+Published in Kenya Gazette Vol. CIX—No. 81 on 9 November 2007
+Assented to on 22 October 2007
+Commenced on 2 June 2008
+[Revised by 24th Annual Supplement (Legal Notice 221 of 2023) on 31 December 2022]
+An Act of Parliament to provide for compensation to employees for work related injuries and diseases
+contracted in the course of their employment and for connected purposes
+Part I – PRELIMINARY
+1. Short title
+This Act may be cited as the Work Injury Benefits Act.
+2. Interpretation
+In this Act, unless the context otherwise requires—
+"accident" means an accident arising out of and in the course and scope of an employee’s employment and
+resulting in personal injury;
+"Board" means the National Labour Board;
+"Cabinet Secretary" means the Cabinet Secretary for the time being responsible for labour matters;
+"capitalised value" means the total anticipated allowance over a certain period;
+"compensation" means compensation as provided for under this Act and includes medical aid and any
+benefit of any nature to which an employee or his dependants may be entitled to under this Act;
+"Council" means the National Council for Occupational Safety and Health;
+"dependant" means a person defined as a dependant in section 6;
+"Director" means the Director of Occupational Safety and Health Services;
+"earnings" means the remuneration of an employee at the time of the accident calculated in the manner
+set out in section 37;
+"employer" means a person defined as an employer in section 4 and includes a principal;
+"injury" means a personal injury and includes the contracting of a scheduled disease;
+"medical advisory panel" means a panel appointed from medical and occupational health and safety
+practitioners to advise the Director for purposes of this Act;
+"medical aid" means any or all of the benefits specified in sections 45 and 47;
+"medical practitioner" means a person appointed by the Director for purposes of section 48 entitled to
+practise in Kenya under the Medical Practitioners and Dentists Act (Cap. 253);
+"periodical payments" means a periodical payment of compensation in accordance with the provisions of
+this Act;
+"permanent disablement" means permanent injury or disfigurement;
+1
+Work Injury Benefits Act (Cap. 236) Kenya
+"personal representative" means the executor or other person lawfully appointed to take charge of the
+estate of a deceased employee and if there is no such person so appointed, any person specially appointed
+under this Act to make an application on behalf of the deceased employee’s dependants for compensation,
+and in other respects, to act as his personal representative for the purposes of this Act;
+"scheduled disease" means any disease specified in the Second Schedule;
+"temporary disablement" means, a condition of temporary nature caused by an accident which results in
+the loss of or diminution of wage-earning capacity in the work at which such employee was employed at
+the time of accident.
+3. Application
+This Act shall apply to all employees, including employees employed by the Government, other than the
+armed forces, in the same way and to the same extent as if the Government were a private employer.
+4. Meaning of employer
+(1) In this Act, "employer" means any person who employs an employee and includes—
+(a) the legal personal representative of a deceased employer;
+(b) any person controlling the business of an employer; and
+(c) the Government.
+(2) If the services of an employee are temporarily lent or let on hire to another person by an employer,
+the employer is deemed to continue to be the employer of the employee while the employee is
+working for that other person.
+(3) In the case of an employee employed by a club or an association of persons, the trustees of the club
+or association shall be deemed to be the employer.
+(4) For the purposes of the giving or receiving of statements, notices or other documents under this
+Act, the term "employer" includes the manager, or other duly authorized employee or agent of the
+employer.
+5. Meaning of "employee"
+(1) In this Act, "employee" means a person who has been employed for wages or a salary under a
+contract of service and includes an apprentice or indentured learner.
+(2) Subsection (1) applies irrespective of whether the contract is expressed or implied, is oral or in
+writing, and whether the remuneration is calculated by time or by work done and whether by the
+day, week, month or any longer period and whether the payment is in cash or recognised legal
+tender.
+(3) The following persons shall not be regarded as employees for purposes of this Act—
+(a) a person whose employment is of a casual nature and who is employed otherwise than for
+the purposes of the employer’s trade or business;
+(b) any person employed outside Kenya save as provided in section 11 of this Act;
+(c) a member of the employer’s family dwelling in the employer’s house or cartilage thereof and
+not for the purpose of employment; or
+(d) a member of the Defence Forces as defined in the Kenya Defence Forces Act (Cap. 199).
+(4) Any reference in this Act to an employee who has been injured shall, when the employee is dead,
+include a reference to the employee’s representative or dependants or to any other person to whom
+or for whose benefit compensation is payable.
+2
+Work Injury Benefits Act (Cap. 236) Kenya
+6. Meaning of dependant
+(1) In this Act "dependant" means—
+(a) the widow or widower of an employee;
+(b) a child of the employee who has not attained the age of eighteen years including a
+posthumous child, a stepchild and an adopted child, adopted prior to the accident, but
+excluding a child who is married or who is self-supporting;
+(c) a parent, step-parent or an adoptive parent who adopted such employee if he adopted prior
+to the accident or death;
+(d) a child of the employee not contemplated by paragraph (b);
+(e) a brother, sister, half-brother, half-sister or parent, grandparent, or grandchild of an
+employee; and
+(f) any other person who at the time of the accident was wholly dependent upon the employee
+for the necessaries of life.
+(2) In the case of an employee who leaves two or more widows, such widows shall be entitled to share
+such compensation as would be payable to a single widow of the deceased employee.
+Part II – OBLIGATIONS OF EMPLOYERS
+7. Employer to be insured
+(1) Every employer shall obtain and maintain an insurance policy, with an insurer approved by the
+Cabinet Secretary in respect of any liability that the employer may incur under this Act to any of his
+employees.
+(2) The Cabinet Secretary may exempt from the provisions of subsection (1), an employer who provides
+and maintains in force a security which complies with the requirements of subsection (3), and any
+exemption under subsection (3) shall continue in force only so long as the security is maintained.
+(3) For the purposes of subsection (2), a security shall consist of an undertaking by a surety approved
+by the Cabinet Secretary to make good, subject to any conditions specified in the security, any
+failure by the employer to discharge any liability which the employer may incur under this Act to
+any of its employees up to an amount approved by the Cabinet Secretary.
+(4) Any employer who contravenes the provisions of subsection (1) commits an offence and shall on
+conviction be liable to a fine not exceeding one hundred thousand shillings or to imprisonment for
+a term not exceeding three months, or to both.
+(5) If the contravention in respect of which an employer is convicted is continued after the conviction,
+the employer is guilty of a further offence and liable in that respect to a fine not exceeding ten
+thousand shillings for each day on which the contravention continues.
+8. Registration of employer
+(1) Every employer carrying on business in Kenya shall within the prescribed period and in the
+prescribed manner—
+(a) register with the Director;
+(b) furnish the Director with the prescribed particulars of their business; and
+(c) within a period determined by the Director furnish additional particulars as the Director may
+require.
+3
+Work Injury Benefits Act (Cap. 236) Kenya
+(2) The particulars referred to in subsection (1) shall be furnished separately in respect of each
+business carried on by the employer.
+(3) An employer shall, within thirty days of any change in the particulars so furnished notify the
+Director of such change.
+(4) Where an employer carries on business in more than one workplace, or carries on more than one
+class of business, the Director may require the employer to register separately in respect of each
+place or class of business.
+9. Employer to keep records
+(1) An employer shall—
+(a) keep a register or other record of the earnings and other prescribed particulars of all
+employees;
+(b) at all reasonable times produce the register or record on demand to the Director for
+inspection; and
+(c) retain the register, record or reproduction referred to in paragraph (1)(a) for a period of at
+least six years after the date of the last entry in that register or record.
+(2) An employer who fails to comply with any provision of this section commits an offence.
+(3) Any employer registered under section 8 who ceases to carry on business for any reason, shall notify
+the Director before winding up the business.
+(4) An employer who keeps records of remuneration is deemed to keep records in accordance with this
+section.
+Part III – RIGHT TO COMPENSATION
+10. Right to compensation
+(1) An employee who is involved in an accident resulting in the employee’s disablement or death is
+subject to the provisions of this Act, and entitled to the benefits provided for under this Act.
+(2) An employer is liable to pay compensation in accordance with the provisions of this Act to an
+employee injured while at work.
+(3) An employee is not entitled to compensation if an accident, not resulting in serious disablement or
+death, is caused by the deliberate and wilful misconduct of the employee.
+(4) For the purposes of this Act, an occupational accident or disease resulting in serious disablement
+or death of an employee is deemed to have arisen out of and in the course of employment if
+the accident was due to an act done by the employee for the purpose of, in the interests of or in
+connection with, the business of the employer despite the fact that the employee was, at the time of
+the accident acting—
+(a) in contravention of any law or any instructions by or on behalf of his employer; or
+(b) without any instructions from his employer.
+(5) For the purposes of this Act, the conveyance of an employee to or from the employee’s place of
+employment for the purpose of the employee’s employment by means of a vehicle provided by the
+employer for the purpose of conveying employees is deemed to be in the course of the employee’s
+employment.
+(6) For the purposes of this section, an injury shall only be deemed to result in serious disablement if
+the employee suffers a degree of permanent disablement of forty percent or more.
+4
+Work Injury Benefits Act (Cap. 236) Kenya
+11. Accident outside Kenya
+(1) If an employer carries on business chiefly in Kenya and an employee ordinarily employed in Kenya
+is injured in an accident while temporarily deployed outside Kenya, the employee is, subject to
+subsection (3), entitled to compensation as if the accident had happened in Kenya.
+(2) The compensation contemplated in subsection (1) shall be determined on the basis of the earnings
+the employee would have received if the employee had remained in Kenya.
+(3) This section does not apply to an employee who has been deployed outside Kenya—
+(i) for a continuous period of twelve months or longer; or
+(ii) for a shorter period, if the employment outside Kenya is expected to last for more than
+twelve months.
+(4) If an employee ordinarily employed outside Kenya by an employer that carries on business chiefly
+outside Kenya, is injured in an accident while temporarily deployed in Kenya, the employee is not to
+be entitled to compensation under this Act.
+(5) An employee deployed in Kenya for a continuous period of twelve months, shall be deemed to be
+ordinarily employed in Kenya.
+12. Accidents during training for or performance of emergency Services
+If an employee is injured in an occupational accident or contracts an occupational disease while the
+employee, with the consent of the employer, is engaged in any organized first aid, ambulance or rescue
+work, fire-fighting or other emergency service, the accident or disease is for the purposes of this Act,
+deemed to have arisen out of and in the course of the employee’s employment.
+13. Special circumstances in which Director may refuse award
+The Director may refuse to grant compensation under this Act to an employee if—
+(a) the employee at any time represented to the employer, knowing the information to be false, that he
+was not suffering from or had not previously suffered from a serious injury or occupational disease
+or any other serious disease, and such an accident or occupational disease was caused by, or the
+death resulted from or the disablement resulted from or was aggravated by, such injury or disease;
+or
+(b) in the opinion of the Director, the death was caused, or the disablement was caused, prolonged or
+aggravated by the unreasonable refusal or wilful neglect of the employee to submit to medical aid in
+respect of any injury or disease, whether caused by the accident or existing before the accident.
+14. Special circumstances in which the Director may order compensation
+If in a claim for compensation under this Act it appears that the contract of service apprenticeship or
+learnership of the employee concerned is invalid, the Director may approve compensation for the claim as
+if the contract was valid at the time of the accident.
+15. Employee requiring constant assistance
+(1) If an injury in respect of which compensation is payable causes disablement of such a nature that
+the employee is unable to perform the essential functions of life without the constant assistance
+of another person, the Director shall grant an allowance in addition to any other benefit provided
+for under this Act, towards the cost of such help as may be required for a specified period, which
+allowance shall be reviewed from time to time.
+5
+Work Injury Benefits Act (Cap. 236) Kenya
+(2) The Director may, upon the application of the employee and on good cause shown by the applicant,
+revise any order made in accordance with subsection (1).
+16. Substitution of compensation for other legal remedies
+No action shall lie by an employee or any dependant of an employee for the recovery of damages in respect
+of any occupational accident or disease resulting in the disablement or death of such employee against
+such employee’s employer, and no liability for compensation on the part of such employer shall arise save
+under the provisions of this Act in respect of such disablement or death.
+17. Claims against third parties
+(1) If an occupational accident or disease in respect of which compensation is payable, was caused
+in circumstances resulting in another person other than the employer concerned (in this section
+referred to as the ‘third party’) being liable for damages in respect of such accident or disease—
+(a) the employee may claim compensation in accordance with this Act and may also institute
+action for damages in a court against the third party; and
+(b) the employer or insurer by whom compensation in respect of that accident or disease
+is payable may institute action in a court against the third party for the recovery of
+compensation that the employer or insurer, as the case may be, is obliged to pay under this
+Act.
+(2) In awarding damages in an action referred to in subsection (1)(a) the court shall have regard to the
+compensation paid in accordance with this Act.
+(3) In an action referred to in subsection (1)(b), the amount recoverable may not exceed the amount of
+damages, if any, which in the opinion of the court would have been awarded to the employee but for
+the provisions of this Act.
+(4) For the purposes of this section, compensation includes the cost of medical aid already incurred and
+any amount paid or payable in accordance with the provision of section 15 and, in the case of an
+allowance, the capitalized value of the allowance, irrespective of whether a lump sum is at any time
+paid in lieu of the whole or a portion of such allowance.
+18. Threats and compulsion
+Any person who threatens an employee or in any manner compels or influences an employee to do
+something resulting in or directed at the deprivation of that employee’s right to benefits in terms in
+accordance with this Act commits an offence.
+19. Compensation not to be alienated
+(1) Notwithstanding any provision to the contrary in any written law, compensation shall not be—
+(a) assigned or pledged;
+(b) capable of attachment or any form of execution under a judgment or order of a court of law;
+or
+(c) set off against any debt of the person entitled to the compensation.
+(2) Any provision of an agreement in terms of which an employee assigns, purports to assign,
+relinquishes or purports to relinquish any right to benefits in accordance with this Act, shall be
+void.
+6
+Work Injury Benefits Act (Cap. 236) Kenya
+20. Compensation not to form part of deceased employee’s estate
+Compensation paid under this Act for the death of an employee shall not form part of the employee’s
+estate.
+Part IV – REPORTING OF ACCIDENTS
+21. Notice of accident by employee to employer
+Written or verbal notice of any accident provided for in section 22 which occurs during employment shall
+be given by or on behalf of the employee concerned to the employer and a copy of the written notice or a
+notice of the verbal notice shall be sent to the Director within twenty-four hours of its occurrence in the
+case of a fatal accident.
+22. Notice of injury or accident by employer to Director
+(1) Subject to the provisions of this section, an employer shall report an accident to the Director in the
+prescribed manner within seven days after having received notice of an accident or having learned
+that an employee has been injured in an accident.
+(2) For the purposes of this section, an accident includes any injury reported by an employee, to his
+employer, if the employee when reporting the injury, alleges that it arose out of and in the course
+of his employment and irrespective of the fact that the employer is of the opinion that the alleged
+accident did not so arise out of and in the course of employment.
+(3) An employer shall, at the request of an employee or the dependant of an employee, furnish the
+employee, or dependants with a copy of the notice of the accident furnished by the employer to the
+Director in respect of a claim for compensation by such employee or dependant.
+(4) An employer who fails to comply with subsection (1) commits an offence.
+(5) The provisions of this section do not prevent an employee from reporting an occupational accident
+or disease to the Director at any stage.
+23. Inquiry by Director
+(1) After having received notice of an accident or having learned that an employee has been injured
+in an accident the Director shall make such inquiries as are necessary to decide upon any claim or
+liability in accordance with this Act.
+(2) An inquiry made under subsection (1) may be conducted concurrently with any other investigation.
+(3) An employer or employee shall, at the request of the Director, furnish such further particulars
+regarding the accident as the Director may require.
+(4) A person who fails to comply with the provisions of subsection (3) commits an offence.
+24. Particulars in support of claim
+(1) An employee who is injured in an accident or his dependant, shall, when reporting the accident or
+thereafter at the request of the employer or Director, furnish such information and documents as
+may be prescribed or as the employer or Director may request.
+(2) An employer shall, within seven days after having received a claim, medical report or other
+document or information concerning such claim, submit the claim, report, document or
+information to the Director.
+7
+Work Injury Benefits Act (Cap. 236) Kenya
+25. Employee to submit to medical examination
+(1) An employee who claims compensation or to whom compensation has been paid or is payable,
+shall when required by the Director or the employer as the case may be, after reasonable notice,
+submit himself at the time and place mentioned in the notice to an examination by the medical
+practitioner designated by the Director or the employer with the approval of the Director.
+(2) If, in the opinion of any medical practitioner, an employee is not capable of travelling to be
+examined by the designated medical practitioner, the employee shall inform the party requiring the
+examination thereof or cause him to be so informed, and the designated medical practitioner shall
+then examine the employee at a time and place as agreed upon.
+(3) An employee shall be entitled at his own expense, to have a medical practitioner of his choice
+present at an examination by a designated medical practitioner.
+26. Claim for compensation
+(1) A claim for compensation in accordance with this Act shall be lodged by or on behalf of the claimant
+in the prescribed manner within twelve months after the date of the accident or, in the case of
+death, within twelve months after the date of death.
+(2) If a claim for compensation is not lodged in accordance with subsection (1), the claim for
+compensation may not be considered under this Act, except where the accident concerned has been
+reported in accordance with section 21.
+(3) If an employer fails to report an accident or to provide information requested by the Director as
+specified in the request, the Director may—
+(a) conduct an investigation and recover the cost of the investigation from the employer as a
+debt due from the employer; or
+(b) levy a penalty on the employer.
+(4) An employer or insurer against whom a claim for compensation is lodged by the Director under this
+section, shall settle the claim within ninety days of the lodging of the claim.
+(5) The Director shall, within thirty days of receipt of the money claimed under subsection (1), pay the
+money to the employee who made the claim or his dependants.
+(6) An employer or an insurer who fails to pay the compensation claimed under this subsection
+commits an offence and shall on conviction be liable to a fine not exceeding five hundred thousand
+shillings or to imprisonment for a term not exceeding one year or to both.
+27. Lapse of right to benefits
+(1) A right to benefits in accordance with this Act shall lapse if the accident is not reported to the
+employer within twelve months after the date of such accident.
+(2) Notwithstanding the provisions of subsection (1), the failure to report an accident to an employer
+as required in subsection (1) is not a bar to compensation if it is proved that the employer had
+knowledge of the accident from any other source.
+(3) Subject to section 26, failure to report an accident to an employer as required in subsection (1), or
+any error or inaccuracy in such a notice, is not a bar to compensation if—
+(a) the employer is not or would not be seriously prejudiced by such failure, error or inaccuracy
+if notice is then given or the error or inaccuracy is corrected; or
+(b) if such failure, error or inaccuracy was unforeseeable or was caused by the employee’s
+absence from Kenya.
+8
+Work Injury Benefits Act (Cap. 236) Kenya
+Part V – COMPENSATION
+28. Compensation for temporary total or partial disablement
+(1) An employee who suffers temporary total disablement due to an accident that incapacitates the
+employee for three days or longer is entitled to receive a periodical payment equivalent to the
+employees earnings, subject to the minimum and maximum amounts fixed by the Cabinet Secretary
+from time to time, after consultation with the Council.
+(2) Compensation for temporary partial disablement shall consist of a proportionate amount of the
+periodical payment calculated as specified in subsection (1).
+(3) Periodical payments shall be made for as long as the temporary disablement continues, but not for a
+period that exceeds twelve months.
+(4) An employee is not entitled to receive a periodical payment during any period in which the
+employee is receiving full pay, as provided for in the Employment Act, or any other law or contract
+of service.
+(5) The periodical payment of an employee who is receiving part payment of remuneration shall be
+reduced so that the employee does not receive more than the employee would otherwise have
+earned.
+29. Expiry of compensation for temporary total or partial disablement
+(1) The right to compensation for temporary, total or partial disablement expires—
+(a) upon the termination of the disablement or if the employee resumes work;
+(b) if the employee resumes any other work at the same or greater earnings; or
+(c) if the employee is awarded compensation for permanent disablement.
+(2) Notwithstanding the provisions of subsection (1), an employee may be awarded additional
+compensation for temporary, total or partial disablement if—
+(a) the disablement of the employee concerned recurs or the employer’s health deteriorates; or
+(b) the employee receives further medical aid necessitating further absence from his
+employment, provided that such aid will reduce his disablement.
+30. Compensation for permanent disablement
+(1) Compensation for permanent disablement shall be calculated on the basis of ninety six months
+earnings subject to the minimum and maximum amounts determined by the Cabinet Secretary,
+after consultation with the Board, and set out in the Third Schedule.
+(2) If an employee has sustained an injury specified in the first column of the First Schedule, the
+employee shall for the purposes of this Act, be deemed to be permanently disabled to the degree set
+out in the second column of the First Schedule.
+(3) If an employee sustains an injury not specified in the First Schedule which leads to permanent
+disablement, the employee shall be paid such percentage of disablement in respect thereof as in the
+opinion of a medical doctor will not lead to a result contrary to the guidelines of the First Schedule.
+(4) If an injury or serious disablement contemplated in paragraph (a) or (b) has unusually serious
+consequences for an employee as a result of the special nature of the employee’s occupation, the
+Director may determine such higher percentage as the Director shall deem equitable.
+(5) No payment for temporary disablement in accordance with the provisions of section 29 shall be
+deducted from compensation payable under this section.
+9
+Work Injury Benefits Act (Cap. 236) Kenya
+31. Amendment of First Schedule
+The Cabinet Secretary may, on the recommendation of the Director and in consultation with the Council,
+amend the First Schedule by notice in the Gazette:
+Provided that at least sixty days before any such amendment a notice shall be published in the Gazette
+stating—
+(a) the intention to amend the First Schedule and the proposed content of the amendment; and
+(b) inviting any person who wishes to comment on the proposed amendment to submit such comment
+in writing to the Director within the period specified in the notice.
+32. Compensation for permanent disablement of employee in training
+If as a result of an accident an employee sustains permanent disablement and at the time of the accident
+was an apprentice or in the process of being trained in any trade, occupation or profession, the earnings of
+the employee shall be calculated on the basis of the earnings to which an employee would normally have
+been entitled if at the time of the accident the employee had been performing the same work as a person
+in the same occupation, trade or profession with five years experience.
+33. Compensation to employee previously in receipt of compensation
+(1) In awarding compensation to an employee in respect of permanent disablement or in reviewing
+an award of compensation, the Director may take into account any compensation awarded to the
+employee in accordance with this Act or any other law, to the employee as a result of the permanent
+disablement.
+(2) If an employee has received compensation for permanent disablement in accordance with this Act
+and is subsequently injured in an accident resulting in further permanent disablement in respect
+of which compensation is payable in accordance with this Act, compensation in respect of such
+further permanent disablement shall be calculated, where applicable, on the basis of the earnings
+that the employee received at the time of any of the accidents concerned, whichever earnings are
+more favourable to the employee.
+(3) An employee shall not be paid compensation in respect of one or more accidents if it amounts to
+more than the compensation payable in respect of permanent total disablement.
+34. Amount of compensation in case of death
+(1) If an employee dies as a result of an injury caused by an accident, compensation shall be paid to the
+dependants of the employee in accordance with the provisions of the Third Schedule, subject to the
+maximum and minimum amount determined by the Cabinet Secretary after consultation with the
+Council.
+(2) No amount may be deducted from the compensation awarded under this section to a dependant in
+respect of any compensation awarded to the employee in respect of the same or any other accident.
+(3) For the purposes of this section, a dependant is deemed to have been wholly financially dependent
+upon the employee at the time of the accident, unless the contrary is proved.
+(4) In addition to the compensation payable under this section, the employer is liable to pay reasonable
+expenses for the funeral of the deceased employee subject to the maximum amount determined by
+the Cabinet Secretary, after consultation with the Council.
+10
+Work Injury Benefits Act (Cap. 236) Kenya
+35. Amendment of Third Schedule
+The Cabinet Secretary may, on the recommendation of the Director, and after consultation with the
+Board, amend the Third Schedule by notice in the Gazette in respect of the nature, extent, minimum and
+maximum amount of benefits:
+Provided that at least sixty days before any such amendment a notice shall be published in the Gazette—
+(a) of the intention to amend and the proposed content of the amendment; and
+(b) inviting any person who wishes to comment on the proposed amendment to submit such comment
+in writing to the Director within the period specified in the notice.
+36. Payment of compensation
+(1) Compensation payable in accordance with the provisions of this Act may, for reasons deemed by the
+Director to be sufficient, be—
+(a) paid to the employee or the dependant of an employee entitled thereto, or to any other
+person on behalf of such employee or dependant, in instalments or in such other manner as
+the Director may deem fit;
+(b) invested or applied to the advantage of the employee or the dependants of an employee;
+(c) paid to the Public Trustee to be applied for the benefit of the dependants of a deceased
+employee; or
+(d) applied as specified in paragraphs (a), (b) and (c).
+(2) On the death of an employee the unpaid balance of any compensation awarded to the employee
+does not form part of the employee’s estate and shall be paid to the employee’s dependants as
+specified in the Third Schedule.
+(3) Where there is no dependant, the Director may authorise payment of the balance of the
+compensation to the estate of the deceased.
+37. Manner of calculating earnings
+(1) In order to determine compensation, the earnings of an employee are deemed to be the monthly
+rate at which the employee was being remunerated by the employer at the time of the accident,
+including—
+(a) the value of any rations, living quarters or both supplied by the employer to the employee to
+the date of the accident or report of disease;
+(b) allowances paid regularly; and
+(c) any overtime payment or other special remuneration of a regular nature or for work
+ordinarily performed,
+but excluding—
+(i) payment for intermittent overtime;
+(ii) payment for non-recurrent occasional services;
+(iii) amounts paid by an employer to an employee to cover any special expenses; and
+(iv) ex-gratia payments whether by the employer or any other person.
+(2) If an employee’s remuneration is not consistent or is determined in accordance with a rate
+calculated on the basis of work performed, the employee’s earnings shall be calculated on the basis
+11
+Work Injury Benefits Act (Cap. 236) Kenya
+of average remuneration for similar work on the same conditions of remuneration for the period of
+twelve months prior to the accident.
+(3) If by reason of the short duration of the service of an employee with his employer it is impracticable
+to calculate the employees earnings in such service, the earnings shall, if possible, be calculated on
+the basis of the amount which—
+(a) the employee with similar work at the same conditions of remuneration earned with another
+employer during the twelve months immediately prior to the accident; or
+(b) during the twelve months immediately prior to the accident was earned by other employees
+of the first-mentioned employer with similar work and on the same conditions of
+remuneration, or would have been earned by the employee during the previous twelve
+months had the employee been so employed.
+(4) If an employee has entered into contracts of service with two or more employers and has in terms of
+those contracts, worked at one time for one employer and at another time for another employer, the
+employee’s earnings shall be calculated as if the earnings under all such contracts were earnings in
+the employment of the employer for whom the employee was working at the time of the accident.
+(5) If in the opinion of the Director it is not practicable to calculate the earnings of an employee in
+accordance with the subsections (2), (3) and (4), the Director may calculate those earnings in such
+manner as the Director may deem equitable, but with due regard to the principles laid down in
+those provisions.
+(6) This section shall not be construed as prohibiting the calculation of earnings on a weekly basis, but
+where earnings are so calculated the monthly earnings shall be calculated, as equal to four and onethird times the amount of such weekly earnings.
+Part VI – OCCUPATIONAL DISEASES
+38. Compensation in respect of scheduled and unscheduled diseases
+(1) Subject to the provisions of this Act, an employee is entitled to compensation in accordance with
+this Act, if the employee—
+(a) contracts a disease specified in the Second Schedule that arose out of and in the course of the
+employee’s employment; or
+(b) contracts any other disease that arose out of and in the course of the employee’s
+employment.
+(2) An employee who contracts a disease in the circumstances contemplated in subsection (1) is
+deemed to have contracted an occupational disease and is entitled to compensation as if the
+disablement caused by the disease had been caused by an accident.
+(3) If an employee who has contracted an occupational disease has also contracted a disease other
+than an occupational disease and the recovery of the employee is being delayed or the employee’s
+temporary total disablement is being prolonged by reason of that other disease, the employee is
+entitled to medical aid for that other disease.
+(4) If an employee has contracted an occupational disease resulting in permanent disablement and the
+disease is aggravated by another disease, a medical practitioner may, in determining the degree of
+permanent disablement have regard to that other disease if it is equitable to do so.
+39. Presumption regarding cause of occupational disease
+If an employee who has contracted an occupational disease specified in the Second Schedule was employed
+in any work mentioned in that Schedule in respect of that disease, it shall be presumed, unless the
+contrary is proved, that the disease arose out of and in the course of his employment.
+12
+Work Injury Benefits Act (Cap. 236) Kenya
+40. Calculation of compensation
+(1) Compensation for an occupational disease shall be calculated on the basis of the earnings of the
+employee calculated in accordance with the provisions of section 35—
+(a) at the time of the commencement of the disease; or
+(b) such earlier date as a medical practitioner may determine, if the employee was suffering
+from the disease at an earlier date, whichever earnings are more favourable to the employee.
+(2) If an employee is no longer in employment at the time of the commencement of the disease, the
+earnings shall be calculated on the basis of the earnings that the employee would have been earning
+had the employee still been working.
+41. Notice of occupational disease by employee and employer
+(1) An employee shall as soon as possible after the commencement of an occupational disease give
+written notice thereof to the employer or to the employer where the employee was last employed,
+and in the prescribed manner to the Director.
+(2) An employer shall, within fourteen days after receiving notice or learning of the employee
+occupational disease, report such disease, in the prescribed manner to the Director, irrespective
+of whether the employer may be of the opinion that the employee did not contract such disease in
+employment or contracted it in the employ of a previous employer.
+(3) An employer who fails to comply with the provisions of subsection (2) commits an offence.
+42. Date of occupational disease
+(1) For purposes of this Act, the commencement of an occupational disease is deemed to be the date
+on which a medical practitioner diagnosed that disease for the first time or such earlier date as the
+medical practitioner may determine if it is more favourable to the employee.
+(2) The provisions of this Act regarding an accident shall, where appropriate, apply mutatis mutandis to
+a disease referred to in subsection (1).
+43. Amendment of Second Schedule
+The Cabinet Secretary may, on the recommendation of the Council and in consultation with the Director,
+amend the Second Schedule by notice in the Gazette, in respect of the description of diseases and work:
+Provided that at least sixty days before any such amendment a notice shall be published in the Gazette—
+(a) of the intention to amend the Second Schedule and the proposed content of the amendment; and
+(b) in which any person who wishes to comment on the proposed amendment or amendments is
+invited to submit such comment in writing to the Director within the period specified in the notice.
+44. Appointment of medical advisory panels
+(1) The Director may, after consultation with the Council and in consultation with the Director of
+Medical Services, appoint medical advisory panels which shall consist of such members as may be
+necessary to—
+(a) assist with regard to the diagnosis of occupational diseases in individual cases;
+(b) advise the Director regarding—
+(i) the inclusion of occupational diseases in the Second Schedule; and
+13
+Work Injury Benefits Act (Cap. 236) Kenya
+(ii) general policy concerning the diagnosis of, and disablement as a result of,
+occupational diseases.
+(2) A member of a medical advisory panel shall be paid the prescribed remuneration, travelling and
+subsistence allowances out of the funds set aside for that purpose by Parliament.
+(3) The Director shall designate a member of a medical advisory panel as Chairperson of the panel.
+(4) The members of a medical advisory panel shall hold office for such period and on such terms as the
+Director, after consultation with the Cabinet Secretary may determine.
+(5) The Director may, at any time after consultation with the Council, terminate the appointment of
+any member of a medical advisory panel who has been guilty of misconduct or neglect of duty, or is
+not able to perform his functions in accordance with the provisions of this Act.
+Part VII – MEDICAL AID
+45. First Aid
+(1) An employer shall provide and maintain such appliances and services for the rendering of first aid
+to his employees in case of any accident as may be prescribed in any other written law in respect of
+the trade or business in which the employer is engaged.
+(2) Any employer who fails to comply with the provisions of subsection (1) commits an offence.
+(3) The Cabinet Secretary may, after consultation with the Council, by notice in the Gazette exempt an
+employer or class of employers from application of this section.
+46. Conveyance of injured worker
+(1) If an employee is injured in an accident, which necessitates the employee’s conveyance to a hospital
+medical facility or from a hospital or medical facility to the employee’s residence, the employer
+shall make the necessary conveyance available.
+(2) An employer or anyone in charge of the work in which the employee was employed at the time of
+the accident, who fails to comply with subsection (1) commits an offence.
+47. Medical expenses
+(1) Subject to the provisions of this section, an employer shall defray any expenses reasonably incurred
+by an employee as the result of an accident arising out of, and in the course of the employers
+employment in respect of the following matters—
+(a) dental, medical, surgical or hospital treatment;
+(b) skilled nursing services;
+(c) the supply of medicine and surgical dressing;
+(d) travelling and subsistence in connection with the employee’s journey to and treatment in a
+place within Kenya where he was directed by his medical practitioner to go for treatment;
+and
+(e) the supply, maintenance, repair and replacement of artificial limbs, crutches, and other
+appliances and apparatus used by persons who are physically disabled.
+(2) For the purposes of subsection (1), any damage to any appliance or apparatus specified in
+subsection (1)(e) is deemed to be an injury.
+(3) The necessity, nature and sufficiency of any medical aid provided or to be provided in accordance
+with the provisions of this Part shall be determined by the Council.
+14
+Work Injury Benefits Act (Cap. 236) Kenya
+48. Submission of medical report
+(1) A medical practitioner who examines an employee shall within fourteen days after the first
+examination of the employee injured in an accident or within fourteen days after having diagnosed
+an occupational disease, furnish a medical report to the Director in the prescribed manner.
+(2) Where the employee has at the time of the diagnosis of an occupational disease left employment,
+the medical report shall be made to the Director in a separate form as prescribed under this Act.
+49. Fees for medical aid to be prescribed
+The fees and charges for medical aid to an employee shall be in accordance with the scale prescribed by the
+Cabinet Secretary, from time to time, after consultation with the Council and such bodies or associations
+representing medical practitioners entitled to practice within Kenya as the Cabinet Secretary may think fit,
+and no claim for an amount in excess of a fee in accordance with that scale shall lie against any employer
+in respect of any such medical aid.
+50. Contributions by employees towards cost of medical aid prohibited
+(1) An employer who demands, receives, deducts or recovers from an employee a contribution towards
+the cost of medical aid supplied or to be supplied in accordance with the provisions of this Act,
+commits an offence.
+(2) If an employer has been convicted of contravening subsection (1), the Director may in the
+prescribed form, issue an order against that employer for the payment of the amount received
+contrary to the provisions of subsection (1).
+Part VIII – APPEALS
+51. Objections and appeals against decisions of the Director
+(1) Any person aggrieved by a decision of the Director on any matter under this Act, may within sixty
+days of such decision, lodge an objection with the Director against such decision.
+(2) The objection shall be in writing in the prescribed form accompanied by particulars containing a
+concise statement of the circumstances in which the objection is made and the relief or order which
+the objector claims, or the question which he desires to have determined.
+52. Director’s reply
+(1) The Director shall within fourteen days after the receipt of an objection in the prescribed form,
+give a written answer to the objection, varying or upholding his decision and giving reasons for the
+decision objected to, and shall within the same period send a copy of the statement to any other
+person affected by the decision.
+(2) An objector may, within thirty days of the Director’s reply being received by him, appeal to the
+Industrial Court against such decision.
+Part IX – MISCELLANEOUS PROVISIONS
+53. Director
+(1) There shall be a Director of Work Injury Benefits who shall be responsible for the management of
+this Act.
+15
+Work Injury Benefits Act (Cap. 236) Kenya
+(2) The Director of Work Injury Benefits shall perform the following functions—
+(a) register employers;
+(b) supervise the implementation of this Act;
+(c) ensure that all employers insure their employees;
+(d) receive reports of accidents and carry out investigations into such accidents; and
+(e) ensure that employees who are injured are compensated in accordance with the provisions of
+this Act.
+(3) The Director of Work Injury Benefits shall be assisted in the performance of the functions, specified
+in subsection (1) by such other officers as are necessary, for the proper administration of the Act.
+54. False statements
+Any person who in connection with a claim for compensation in accordance with the provisions of this
+Act, or in any return, notice, report or statement to be given, made or furnished under this Act, makes or
+causes to be made any statement which is false in any material respect, knowing it to be false, commits an
+offence.
+55. General penalty
+A person convicted of an offence under this Act for which no other penalty is provided shall be liable to a
+fine not exceeding two hundred thousand shillings or to imprisonment for a term not exceeding one year
+or to both.
+56. Regulations
+(1) The Cabinet Secretary may make regulations for the purpose of giving better effect to the
+provisions of this Act and, without prejudice to the generality of the foregoing power, the Cabinet
+Secretary may make Regulations—
+(a) prescribing procedure, forms and fees;
+(b) prescribing anything which is to be or may be prescribed under this Act; and
+(c) requiring employers and insurers carrying on in Kenya the business of insuring employers
+against their liabilities under this Act to make periodic or other returns as to such matters
+as the Cabinet Secretary may think fit, and prescribing a time limit for the making of such
+returns.
+(2) Any person required to make a return by virtue of any regulation made under subsection (1) who—
+(a) fails to make such return within the time specified;
+(b) makes or causes to be made a return which the person knows to be false in any material
+particular; or
+(c) on being so required fails to give any information or explanation respecting the return which
+it is in the person powers to give;
+commits an offence and shall, on conviction be liable to a fine not exceeding fifty thousand
+shillings, and, if the contravention in respect of which the person is convicted is continued after
+the conviction, he shall be guilty of a further offence and liable in respect thereof to a fine not
+exceeding ten thousand shillings for each day on which the contravention is so continued.
+(3) Where a person convicted of an offence under this section is a company, the Chairperson, every
+director and every officer of the company shall be guilty of a like offence unless that person proves
+16
+Work Injury Benefits Act (Cap. 236) Kenya
+that the act or omission constituting the offence took place without the person’s knowledge or
+consent.
+57. [Spent]
+58. Savings
+(1) Any regulation or other instrument made or issued under the Workmen’s Compensation Act
+and having effect before the commencement of this Act shall continue to have effect as if such
+regulation or other instrument were made or issued under this Act.
+(2) Any claim in respect of an accident or disease occurring before the commencement of this Act shall
+be deemed to have been lodged under this Act.
+FIRST SCHEDULE [s. 30]
+DEGREE OF DISABLEMENT
+Minimum
+degree of
+disablement
+(percentage)
+A. DEATH
+Death as result of accident ........................................................................................ 100
+B. INJURY (GENERAL)
+1. Loss of hand and foot above site of symes amputation ........................................... 100
+2. Injury resulting in the employee being permanently bed-ridden .............................. 100
+NOTE: The loss of the thumb and four fingers of one hand is equivalent to the loss of a hand
+C. INJURY TO UPPER LIMB
+1. Loss of both hands or loss of both arms at higher
+sites .....................................................................................................
+100
+2. Loss of remaining arm by one-armed
+workman ......................................................................................................
+100
+3. Loss at shoulder or below shoulder with stump of less than 20 centimetres from tip of
+acromion ...................................................
+70
+17
+Work Injury Benefits Act (Cap. 236) Kenya
+4. Loss from 11 centimetres below tip of acromion to less than 20 centimetres from tip of
+olcranon .................................................
+68
+5. Loss from 11 centimetres below tip of oclecranon ..................................... 65
+6. Loss of hand at wrist ........................................................................ 60
+7. Loss of four fingers and thumb on one hand ............................... 60
+8. Loss of four fingers on one hand .................................................... 40
+9. Loss of thumb—
+both phalanges ............................................................................ 25
+one phalanx .................................................................................. 10
+10. Loss of index finger—
+three phalanges ............................................................................ 25
+two phalanges ............................................................................ 10
+one phalanx .................................................................................. 4
+tip and nail, no bone ............................................................................ 2
+11. Loss of ring finger—
+three phalanges ............................................................................ 6
+two phalanges ............................................................................ 4
+one phalanx ............................................................................ 2
+tip and nail, no bone ............................................................................ 1
+12. Loss of little finger—
+three phalanges ................................................................................. 6
+two phalanges .................................................................................. 4
+18
+Work Injury Benefits Act (Cap. 236) Kenya
+one phalanx ....................................................................................... 2
+tip and nail, no bone ............................................................................ 1
+13. Loss of metacarpals—
+three phalanges ................................................................................. 6
+two phalanges ................................................................................... 4
+one phalanx ........................................................................................ 2
+tip and nail, no bone ............................................................................ 1
+14. Loss of metacarpals—
+first or second (additional) ................................................................ 3
+Third, fourth, or fifth (additional) .............................................. 2
+15. Ankylosis in optimum position—
+shoulder ................................................................................ 35
+elbow ...................................................................................... 35
+wrist ....................................................................................... 25
+NOTE: In the case of a right-handed employee, an injury to the left arm or hand and, in the case
+of a left-handed employee, to the right arm or hand, may in the discretion of the Director be
+rated at ninety per centum of the above percentages.
+Where there are two or more injuries the sum of the percentages for such injuries may be
+increased, at the discretion of the Director.
+D. INJURY TO LOWER LIMB
+1. Loss of both feet above site of symes amputation or loss of both legs at higher
+site ..................................
+100
+2. Loss of remaining leg by one-legged employee .................................. 100
+19
+Work Injury Benefits Act (Cap. 236) Kenya
+3. Loss of leg at hip or below hip with stump not exceeding 18 centimetres in length measured
+from tip of great trochanter
+70
+4. Loss of leg below hip with stump exceeding 18 centimetres in length measured from tip of
+great trochanter but not beyond middle thigh ..................................
+60
+5. Loss of leg below middle thigh to 10 centimetres below knee. 50
+6. Loss of leg below knee with stump exceeding 10 centimetres 30
+7. Modified symes operation:—
+one foot ...................................................................... 25
+two feet ....................................................................... 70
+8. Loss of foot at tarso-metatarsal joint .................................................... 25
+9. Loss of all toes of both feet proximal to the proximal inter-phalangeal
+joint ...........................
+25
+10. Loss of all toes of both feet distal to the proximal inter-phalangeal
+joint ...............................
+15
+11. Loss of all toes of one foot proximal to the proximal inter-phalangeal
+joint ...........................
+15
+12. Loss of all toes of one foot distal to the proximal inter-phalangeal
+joint ................................
+10
+13. Loss of great toe:—
+both phalanges .................................................................................. 5
+one phalanx ....................................................................................... 2
+14. Loss of toe other than great if more than one toe lost, each ................................... 1
+15. Ankylosis in optimum position:—
+hip .................................................................................... 50
+knee ..................................................................................... 25
+20
+Work Injury Benefits Act (Cap. 236) Kenya
+ankle ........................................................................................ 15
+E. INJURY TO EYES
+1. Total loss of sight 100
+2. Loss of remaining eye by one eyed employee 100
+3. Loss of one eye, other being normal 30
+4. Total loss of vision of one eye, other being normal 30
+5. Other degree of defective vision based on the visual defect as measured after correction with glasses—
+when best visual acuity is in
+one eye
+other eye Minimum assessment
+(percentage).
+6/6 or 6/9 6/24 15
+6/6 or 6/9 6/36 20
+6//6 or 6/9 6/60 20
+6/6 or 6/9 3/60 30
+6/12 Nil 30
+6/18 6/18 15
+6/18 6/24. 30
+6/18 6/36 40
+6/18 6/60 40
+6/18 3/60 40
+6/18 Nil 40
+6/24 6/24 30
+21
+Work Injury Benefits Act (Cap. 236) Kenya
+6/24 6/36 40
+6/24 6/60 50
+6/24 3/60 50
+6/24 Nil 70
+6/36 6/36 50
+6/36 6/60 60
+6/36 3/60 60
+6/36 Nil 70
+6/36 6/60 80
+6/60 3/60 80
+6/60 Nil 90
+3/60 3/60 80
+3/60 Nil 80
+Nil Nil 100
+6. For the purposes of this Schedule, a one-eyed employee means an employee who has no sight in one eye.
+F. INJURY – LOSS OF HEARING
+1. Total loss of hearing – both ears 50
+2. Total loss of hearing – one ear 7
+G. GENERAL
+Except where otherwise expressly provided, the following conditions shall apply to all assessments in this
+Schedule—
+22
+Work Injury Benefits Act (Cap. 236) Kenya
+(a) total permanent loss of use of limb shall be treated as loss of limb;
+(b) when there are two or more injuries the sum of percentages for such injures may be increased;
+(c) the Director shall prescribe the compensation criteria for Musculoskeletal disorders and occupational
+injuries not elsewhere covered
+SECOND SCHEDULE [s. 38(1)]
+OCCUPATIONAL DISEASES
+PART I
+DESCRIPTION OF DISEASE DESCRIPTION OF WORK
+Any Occupation involving:
+1. Poisoning by lead or a compound
+of lead
+The use or handling of, or exposure to the fumes, dust or vapour
+of lead or a compound of lead or a substance containing lead.
+2. Poisoning by manganese or a
+compound of manganese
+The use or handling of, or exposure to the fumes, dust or vapour
+of manganese or substance containing manganese.
+3. Poisoning by phosphorus or
+phosphine or poisoning due to
+organic phosphorus compound
+The use, handling of, or exposure to the fumes, dust or vapour of
+the anti- cholinesterase action of phosphorus or a compound of
+phosphorus or a substance containing phosphorus.
+4. Poisoning by arsenic or a
+compound of arsenic
+The use or handling of, or exposure to the fumes, dust or vapour
+of arsenic, or a substance containing arsenic.
+5. Poisoning by mercury or a
+compound of mercury
+The use or handling of, or exposure to the fumes, dust or vapours
+of mercury or a substance containing mercury.
+6. Poisoning by carbon bisulphide The use of handling of, or exposure to the, fumes or vapour of,
+carbon bisulphide or a substance containing carbon bisulphide.
+7. Poisoning by benzene or a
+homologue of benzene
+The use or handling of, or exposure to the fumes of, or vapour
+containing benzene or any of its homologues.
+8. Poisoning by a nitro- or aminoor chloro-derivative of benzene
+or of a homologue of benzene or
+poisoning by nitrochlorobenzene
+The use or handling of or exposure to the fumes of, or vapour
+containing a nitro-or amino or chloro-derivative of benzene or
+any of its homologues or nitrochlorobenzene.
+23
+Work Injury Benefits Act (Cap. 236) Kenya
+9. Poisoning by dinitrophenol or
+a homologue or by substituted
+dinitrophenols or by the salts of
+such substances
+The use, handling of, or exposure to the fumes of, or vapour
+containing dinitrophenol, or any of its homologues or any
+substituted dinitrophenols or the salts of such substances.
+10. Poisoning by tetrachlorethane The use or handling of, or exposure to the fumes of or vapour
+containing tetrachlorethane.
+11. Poisoning by tri-cresyl
+phosphate
+The use or handling of, or exposure to the fumes of, or vapour
+containing tri-cresyl phosphate.
+12. Poisoning by tri-phenyl
+phosphate
+The use or handling of, or exposure to the fumes of, or vapour
+containing tri-phenyl phosphate.
+13. Poisoning by diethylene dioxide
+(dioxan)
+The use or handling of, or exposure to the fumes of, or vapour
+containing diethylene dioxide (dioxan).
+13. Poisoning by diethylene dioxide
+(dioxan)
+The use or handling of, or exposure to the fumes of, or vapour
+containing methyl bromide.
+14. Poisoning by methyl bromide The use or handling of, or exposure to the fumes of, or vapour
+containing methyl bromide.
+15. Poisoning by chlorinated
+naphthalene
+The use or handling of, or exposure to the fumes of, or dust or
+vapour containing chlorinated naphthalene.
+16. Poisoning by nickel Exposure to nickel carbonyl gas.
+17. Poisoning by nitrous fumes The use or handling of nitric acid or exposure to nitrous fumes.
+18. Poisoning by Gonioma Kamassi
+(African boxwood)
+The manipulation of gonioma kamassi or any process in or
+incidental to the manufacture of articles therefrom.
+19. Anthrax The handling of wool, hair, bristles, hides or skins or other animal
+products or residues, or contact with animals infected with
+anthrax.
+20. Glanders Contact with equine animals or their carcasses.
+21. (a) Infection by leptospira
+interohaemorrhagieae
+Work in places which are, or are liable to be, infected by rats.
+22. Ankylostomiases Work to do or about a mine.
+24
+Work Injury Benefits Act (Cap. 236) Kenya
+23. (a) Dystrophy of the corneal
+(including ulceration of the corneal
+surface) of the eye
+(b) Localised new growth of the
+skin, papillomatous or keratotic
+(c) Squamous-celled carcinoma of
+the skin, due in any case to arsenic,
+tar, pitch, bitumen mineral oil
+(including paraffin), soot or any
+compound, product or residue of
+any of these substances
+}
+}
+The use or handling of, or exposure to, arsenic, tar pitch,
+bitumen, mineral oil (including paraffin) soot or any compound,
+product or residue of any of these substances.
+24. Inflammation, ulceration
+or malignant disease of skin or
+subcutaneous tissues or of the
+bones, or cataract, due to electromagnetic radiations (other than
+radiant heat), or to ionising articles
+Exposure to electro-magnetic radiation other than heat, or to
+ionizing particles.
+25. Heat cataract Frequent or prolonged exposure to rays from molten or red-hot
+material.
+26. Decompression sickness Subjection to compressed or rarefied air.
+27. Cramp of the hand or forearm
+due to repetitive movements
+Prolonged periods of handwriting, typing or other movements of
+the fingers, hand or arm.
+28. Subcutaneous cellulites of the
+hand (beat hand)
+Manual labour causing severe or Prolonged, friction or pressure
+on hand.
+29. Bursitis, or subcutaneous
+cellulites arising at or about the
+knee due to external friction or
+pressure at or about the knee (beat
+knee)
+Manual labour causing severe or prolonged external friction or
+pressure at or about the knee.
+30. Bursitis or subcutaneous
+cellulites arising at or about the
+elbow due to severe or prolonged
+external friction or pressure at or
+about the elbow (beat elbow)
+Manual labour causing severe or prolonged external friction or
+about the elbow.
+31. Traumatic inflammation of the
+tendons in the hand or fore-arm, or
+the associated tendon sheaths
+Manual labour, or frequent or repeated movements of the hand or
+wrist.
+32. Miner’s systagmus Work in or about a mine.
+25
+Work Injury Benefits Act (Cap. 236) Kenya
+33. Poisoning by beryllium or a
+compound of beryllium
+The use or handling of, exposure to the fumes, dust or vapour of
+beryllium or a compound of beryllium, or a substance containing
+beryllium.
+a) carcinoma of the mucous
+membrane of the nose or
+associated air sinuses
+Work in a factory where nickel is produced by decomposition of a
+gaseous nickel compound.
+(b) Primary carcinoma of a lung Work which necessitates working in or about the building or
+buildings where that process or any other industrial process
+ancillary or incidental thereto is carried on.
+35. Tuberculosis Any occupation involving—
+Close and frequent contact with a source or sources of
+tuberculosis infection by reason of employment—
+(a) in the medical treatment or nursing of a person or persons
+suffering from tuberculosis, or in a service ancillary to such
+treatment or nursing;
+(b) in attendance upon a person or persons suffering from
+tuberculosis where the need for such attendance arises by reason
+of physical or mental infirmity;
+(c) or as a research employee engaged in research in connection
+with tuberculosis; or(d) as laboratory employee, pathologist or
+post-mortem employee where the occupation involves material
+which is a source of tuberculosis infection, or in an occupation
+ancillary to such employment.
+36. Primary neoplasm of the
+epithelial lining of the urinary
+bladder (Papilloma of the bladder),
+or of the epithelial lining of the
+pelvis or of the epithelial lining of
+the ureter
+(a) Work in a building in which any of the following substances is
+produced for renal commercial purposes—
+(i) alphanaphthylamine;
+(ii) dipheny 1 substituted by at least one nitro or primary amino
+group;
+(iii) any of the substances mentioned in subparagraph (ii) above if
+further ring substituted by halogen methyl or methoxy groups but
+not by other groups;
+(iv) the salts of any of the substances mentioned in subparagraphs
+(i) to (iii) above.
+(b) The use of handling of any of the substances mentioned in
+subparagraphs (i) to (iv) of paragraph (a), or work in a process in
+which any such substance is used or handled or is liberated.
+(c) The maintenance or cleaning of any plant or machinery used
+in any such process as is mentioned in paragraph (b), or the
+cleaning of clothing used in any such building as is mentioned
+in paragraph (a) if such clothing is cleaned within the works of
+which the building forms a part or in a laundry maintained and
+used solely in connection with such work.
+26
+Work Injury Benefits Act (Cap. 236) Kenya
+37. Poisoning by cadium Exposure to cadium fumes.
+38. Inflammation or ulceration of
+the mucus membrane of the upper
+respiratory passages or mouth
+produced by dust, liquid or vapour
+Exposure to dust, liquid or vapour.
+39. Non-infective dermatitis of
+external origin (including chrome
+ulceration of the skin but excluding
+dermatitis due to ionising particles
+of electromagnetic radiation other
+than radiant heat)
+Exposure to dust, liquid or vapour or any other external agent
+capable of irritating the skin including friction or heat but
+excluding ionising particles or electromagnetic radiations other
+than radiant heat.
+PART II
+40. Silicosis, asbestos or other
+fibrosis of lungs caused by mineral
+dust
+Any occupation in which workmen are exposed to the inhalation
+of silica dust, asbestos dust or other mineral dust other than a
+'dusty occupation’ as defined in the Grass Fires Act (Cap. 327).
+THIRD SCHEDULE [ss. 30, 34, 35, 36]
+DEPENDANT’S COMPENSATION
+1. One child —12.5% of workman’s allowance
+2. Two children —17.5% of workman’s allowance
+3. Three children —22.5% of workman’s allowance
+4. Four children —27.5% of workman’s allowance
+5. Five children —32.5% of workman’s allowance
+6. More than five children —At a rate to be determined by the Director
+27

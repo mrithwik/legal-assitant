@@ -51,6 +51,16 @@ _TOC_ENTRY_RE = re.compile(r"^\s*\d+[A-Z]?[\.\-—―–]\s*\S")
 _PART_HEADER_RE = re.compile(r"^\s*PART\s+[IVX\d]+", re.IGNORECASE)
 # Dot-leader line: "Short title .......................................... 5"
 _DOT_LEADER_RE = re.compile(r"\.{4,}")
+# Definition line: '”term” means/includes ...' pattern found in interpretation sections
+_DEFINITION_LINE_RE = re.compile(r'[“””]?\w[\w\s\-]*[“””]?\s+(?:means|includes)\b', re.IGNORECASE)
+# Interpretation section header: marks the start of a statutory definitions block
+_INTERP_HEADER_RE = re.compile(
+    r'\b(?:unless\s+the\s+context\s+otherwise\s+requires?|'
+    r'in\s+this\s+(?:Act|Part|section|Schedule|Code|Constitution|Rules?))\b',
+    re.IGNORECASE,
+)
+# Threshold: header + 3+ definition lines → interpretation section (not a substantive provision)
+_MAX_DEFINITION_LINES = 2
 
 _MIN_CHUNK_WORDS = 25
 _MAX_TOC_LINE_RATIO = 0.45
@@ -75,23 +85,56 @@ def _is_substantive_chunk(chunk: str) -> bool:
         or _PART_HEADER_RE.match(ln)
         or _DOT_LEADER_RE.search(ln)
     )
-    return toc_count / len(lines) <= _MAX_TOC_LINE_RATIO
+    if toc_count / len(lines) > _MAX_TOC_LINE_RATIO:
+        return False
+    # Interpretation/definitions sections list term meanings and embed poorly.
+    # Require BOTH signals to avoid false positives on substantive provisions
+    # that use "means" as a noun/verb (e.g. "means of escape" in OSHA fire-exit
+    # sections): a statutory interpretation header AND 3+ "X means Y" lines.
+    has_interp_header = bool(_INTERP_HEADER_RE.search(chunk))
+    definition_count = sum(1 for ln in lines if _DEFINITION_LINE_RE.search(ln))
+    if has_interp_header and definition_count > _MAX_DEFINITION_LINES:
+        return False
+    return True
 
 
 def chunk_text(text: str, size: int = CHUNK_SIZE, overlap: int = CHUNK_OVERLAP) -> list[str]:
-    """Split text into overlapping character-based chunks, stripping whitespace from each."""
+    """Split text into overlapping chunks that end on sentence boundaries.
+
+    Splits the text into sentences first, then accumulates sentences into chunks
+    of approximately `size` characters. A new chunk starts by repeating the last
+    `overlap` characters worth of sentences from the previous chunk so context
+    is preserved across boundaries. Chunks never break mid-sentence.
+    """
     if not text.strip():
         return []
+
+    # Split into sentences on ". ", ".\n", "? ", "! " while keeping the delimiter
+    import re as _re
+    raw_sentences = _re.split(r'(?<=[.?!])\s+', text.strip())
+    sentences = [s.strip() for s in raw_sentences if s.strip()]
+
+    if not sentences:
+        return []
+
     chunks: list[str] = []
-    start = 0
-    while start < len(text):
-        end = min(start + size, len(text))
-        chunk = text[start:end].strip()
-        if chunk:
-            chunks.append(chunk)
-        if end >= len(text):
-            break
-        start += size - overlap
+    current: list[str] = []
+    current_len = 0
+
+    for sentence in sentences:
+        sentence_len = len(sentence) + 1  # +1 for the space between sentences
+        if current and current_len + sentence_len > size:
+            chunks.append(" ".join(current))
+            # Roll back by overlap: drop sentences from the front until we're under overlap
+            while current and current_len > overlap:
+                removed = current.pop(0)
+                current_len -= len(removed) + 1
+        current.append(sentence)
+        current_len += sentence_len
+
+    if current:
+        chunks.append(" ".join(current))
+
     return chunks
 
 
@@ -155,6 +198,22 @@ async def _ingest_documents_async(raw_dir: Path = RAW_DIR) -> dict:
 
     index = get_pinecone_index()
     ns = settings.pinecone_namespace.strip()
+
+    # Delete existing vectors for each source file before upserting so that
+    # re-ingestion is idempotent: updated files get fresh vectors and removed
+    # files leave no orphans.  Metadata filter delete requires a paid Pinecone
+    # plan (Starter supports it); on free pods this is a no-op and duplicates
+    # must be cleared by deleting the namespace manually.
+    ingested_sources = {m["source"] for m in all_metadata}
+    for source_name in ingested_sources:
+        try:
+            delete_kwargs: dict = {"filter": {"source": {"$eq": source_name}}}
+            if ns:
+                delete_kwargs["namespace"] = ns
+            index.delete(**delete_kwargs)
+            logger.info("ingestion_deleted_existing", source=source_name)
+        except Exception as exc:
+            logger.warning("ingestion_delete_skipped", source=source_name, reason=str(exc))
 
     for start in range(0, len(all_docs), _PINECONE_UPSERT_BATCH):
         end = start + _PINECONE_UPSERT_BATCH
