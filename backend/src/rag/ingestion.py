@@ -93,9 +93,7 @@ def _is_substantive_chunk(chunk: str) -> bool:
     # sections): a statutory interpretation header AND 3+ "X means Y" lines.
     has_interp_header = bool(_INTERP_HEADER_RE.search(chunk))
     definition_count = sum(1 for ln in lines if _DEFINITION_LINE_RE.search(ln))
-    if has_interp_header and definition_count > _MAX_DEFINITION_LINES:
-        return False
-    return True
+    return not (has_interp_header and definition_count > _MAX_DEFINITION_LINES)
 
 
 def chunk_text(text: str, size: int = CHUNK_SIZE, overlap: int = CHUNK_OVERLAP) -> list[str]:
