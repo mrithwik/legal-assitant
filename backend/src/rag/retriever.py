@@ -2,7 +2,7 @@
 
 Retrieval Improvements pipeline (applied in order):
 
-  1. Query expansion      — GPT-4o-mini generates 5 focused legal queries
+  1. Query expansion      — GPT-4o-mini generates 7 focused legal queries
                             and returns applicable_statutes for the case
   2. Statute filter       — scopes each Pinecone search to relevant source
                             files when an explicit statute name is detected
