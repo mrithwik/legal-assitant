@@ -34,9 +34,28 @@ Given a case description and a numbered list of retrieved chunks, select the
 chunks that are genuinely useful for analysing this specific case.
 
 Scoring guide:
-  8–10  directly on point — cites the applicable statute, doctrine, or test
-  5–7   useful context — related area of law or analogous principle
-  0–4   not useful — wrong area of law, index entry, or procedural boilerplate
+  8–10  directly on point — cites the applicable statute, doctrine, or test that
+        governs the specific legal issue in dispute
+  5–7   useful context — related area of law, analogous principle, or a provision
+        that reveals what the opposing party is entitled to argue
+  0–4   not useful — score 0–4 for any of the following:
+        • Wrong branch of law: a criminal provision (Penal Code, Criminal Procedure
+          Code) in a civil case, or a civil provision in a criminal case, unless
+          criminal liability is explicitly in dispute in this specific case — a
+          bad-cheque penal provision in a civil wrongful-dishonour claim is 0–4
+          even though both involve cheques
+        • Wrong statute context: an arbitration clause, venue or jurisdiction rule,
+          or procedural provision from a statute whose subject matter is not central
+          to the dispute — Arbitration Act sections in a res judicata case are 0–4
+        • Boilerplate: statute citation clauses ("This Act may be cited as …"),
+          application clauses ("This Act applies to proceedings in …"), publisher
+          headers, or index entries
+        • Interpretation sections: blocks of statutory definitions ("X means Y",
+          "Y includes Z") that list term meanings without stating a substantive rule
+        • Surface keyword match only: a provision that shares a keyword with the
+          case (e.g. "cheque", "employer", "court") but governs a different legal
+          question — score on the legal question the provision addresses, not on
+          shared surface words
 
 Return the 0-based indices of all chunks scoring 5 or above, ordered from most
 to least relevant. Aim for {target} indices, but return more if the case genuinely
@@ -45,10 +64,13 @@ Do not return duplicates or near-identical provisions."""
 
 _COMPRESS_SYSTEM = """You are a senior Kenyan advocate.
 
-Extract only the sentence(s) from the following legal text chunk that are
-directly relevant to the case described. Preserve exact statutory language —
-do not paraphrase or summarise. If the entire chunk is relevant, return it
-unchanged. If nothing is relevant, return an empty string."""
+Extract only the sentence(s) from the CHUNK below that are directly relevant
+to the case described. Rules:
+- Return ONLY text that appears word-for-word in the CHUNK. Never use or adapt
+  text from the CASE description.
+- Preserve exact statutory language — do not paraphrase or summarise.
+- If the entire chunk is relevant, return it unchanged.
+- If nothing in the chunk is relevant, return an empty string."""
 
 
 class _JudgeResult(BaseModel):
@@ -59,7 +81,7 @@ class _CompressResult(BaseModel):
     relevant_text: str
 
 
-async def judge_chunks(case_text: str, chunks: list[str], target: int = 6) -> list[str]:
+async def judge_chunks(case_text: str, chunks: list[str], target: int = 8) -> list[str]:
     """Score and select the most legally relevant chunks for this case.
 
     Falls back to returning all input chunks if the LLM call fails or if the
@@ -151,9 +173,10 @@ async def compress_chunks(case_text: str, chunks: list[str]) -> list[str]:
         if isinstance(res, BaseException):
             logger.warning("rerank_compress_gather_failed", reason=str(res))
             output.append(original)
-        elif res:
-            output.append(res)
-        # empty string → drop the chunk
+        else:
+            # Judge already vetted this chunk; if compressor finds nothing,
+            # keep the full chunk rather than silently discarding a relevant source.
+            output.append(res if res else original)
 
     duration_ms = round((time.monotonic() - start) * 1000, 1)
     logger.info("rerank_compress_complete", n_chunks=len(output), duration_ms=duration_ms)

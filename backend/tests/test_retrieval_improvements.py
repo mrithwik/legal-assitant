@@ -1,12 +1,13 @@
 """Tests for the Retrieval Improvements feature.
 
-Six test groups:
-  1. _is_substantive_chunk  — pure unit tests for the ingestion-time filter
+Seven test groups:
+  1. _is_substantive_chunk    — pure unit tests for the ingestion-time filter
   2. _source_filter_for_query — statute-aware Pinecone metadata filter
-  3. score threshold          — low-score Pinecone matches are dropped
-  4. judge_chunks             — LLM judge selects relevant subset
-  5. compress_chunks          — LLM contextual compression
-  6. rag_retrieve integration — full pipeline with judge + compress called
+  3. _dedup_fuzzy             — near-duplicate removal (containment + Jaccard)
+  4. score threshold          — low-score Pinecone matches are dropped
+  5. judge_chunks             — LLM judge selects relevant subset
+  6. compress_chunks          — LLM contextual compression
+  7. rag_retrieve integration — full pipeline with judge + compress called
 
 All LLM and Pinecone calls are mocked; no network, no API cost.
 """
@@ -15,7 +16,12 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 from src.rag.ingestion import _is_substantive_chunk
 from src.rag.reranker import compress_chunks, judge_chunks
-from src.rag.retriever import _source_filter_for_query, rag_retrieve
+from src.rag.retriever import (
+    _STATUTE_GUARANTEE_QUERIES,
+    _dedup_fuzzy,
+    _source_filter_for_query,
+    rag_retrieve,
+)
 from src.rag.vector_store import PINECONE_METADATA_TEXT_KEY
 
 # ── 1. _is_substantive_chunk ──────────────────────────────────────────────────
@@ -167,7 +173,103 @@ def test_source_filter_no_false_positive_on_partial_word_match():
     assert result is None
 
 
-# ── 3. Score threshold ────────────────────────────────────────────────────────
+def test_source_filter_detects_wiba_by_occupational_safety():
+    result = _source_filter_for_query("occupational safety employer liability injury")
+    assert result == ["work_injury_benefits_act_cap236.txt"]
+
+
+def test_source_filter_detects_wiba_by_work_accident():
+    result = _source_filter_for_query("work accident employer compensation Kenya")
+    assert result == ["work_injury_benefits_act_cap236.txt"]
+
+
+def test_source_filter_detects_wiba_by_personal_protective_equipment():
+    result = _source_filter_for_query("personal protective equipment employer duty")
+    assert result == ["work_injury_benefits_act_cap236.txt"]
+
+
+# ── 3. _dedup_fuzzy ──────────────────────────────────────────────────────────
+
+
+def test_dedup_fuzzy_passes_through_distinct_chunks():
+    a = "Section 7 of the Civil Procedure Act bars relitigation of the same matter."
+    b = "An employer is liable to pay compensation to an employee injured while at work."
+    assert _dedup_fuzzy([a, b]) == [a, b]
+
+
+def test_dedup_fuzzy_removes_exact_contained_substring():
+    short = "Any person who draws or issues a cheque is guilty of a misdemeanour."
+    long = (
+        "Any person who draws or issues a cheque is guilty of a misdemeanour. "
+        "Subsection (1)(a) does not apply with respect to a post-dated cheque."
+    )
+    result = _dedup_fuzzy([short, long])
+    assert result == [long]
+
+
+def test_dedup_fuzzy_keeps_longer_when_shorter_arrives_first():
+    short = "No court shall try any suit in which the matter was already in issue."
+    long = (
+        "No court shall try any suit in which the matter was already in issue "
+        "between the same parties litigating under the same title in a court of competent jurisdiction."
+    )
+    result = _dedup_fuzzy([short, long])
+    assert result == [long]
+
+
+def test_dedup_fuzzy_keeps_longer_when_longer_arrives_first():
+    long = (
+        "No court shall try any suit in which the matter was already in issue "
+        "between the same parties litigating under the same title in a court of competent jurisdiction."
+    )
+    short = "No court shall try any suit in which the matter was already in issue."
+    result = _dedup_fuzzy([long, short])
+    assert result == [long]
+
+
+def test_dedup_fuzzy_removes_high_jaccard_duplicate():
+    a = "Every person has the right to administrative action that is expeditious efficient lawful reasonable and procedurally fair."
+    b = "Every person has the right to administrative action that is expeditious, efficient, lawful, reasonable and procedurally fair."
+    result = _dedup_fuzzy([a, b])
+    assert len(result) == 1
+
+
+def test_dedup_fuzzy_removes_subset_with_extra_header():
+    """Chunk with section header should absorb the same chunk without the header,
+    even when the substring check fails due to words inserted by the header."""
+    with_header = (
+        "Unfair termination. 45. No employer shall terminate the employment "
+        "of an employee unfairly. A termination is unfair if the employer "
+        "fails to prove the reason is valid and procedure was fair."
+    )
+    without_header = (
+        "45. No employer shall terminate the employment of an employee "
+        "unfairly. A termination is unfair if the employer fails to prove "
+        "the reason is valid and procedure was fair."
+    )
+    result = _dedup_fuzzy([with_header, without_header])
+    assert len(result) == 1
+    assert result[0] == with_header
+
+
+def test_dedup_fuzzy_preserves_distinct_provisions_with_shared_words():
+    # Both use common legal words but are clearly different provisions
+    a = "No employer shall terminate the employment of an employee unfairly without valid reason."
+    b = "No court shall try any suit where the matter was directly in issue between the same parties."
+    result = _dedup_fuzzy([a, b])
+    assert result == [a, b]
+
+
+def test_dedup_fuzzy_empty_input():
+    assert _dedup_fuzzy([]) == []
+
+
+def test_dedup_fuzzy_single_chunk():
+    chunk = "Section 23 of the Limitation of Actions Act provides for fresh accrual on acknowledgement."
+    assert _dedup_fuzzy([chunk]) == [chunk]
+
+
+# ── 4. Score threshold ────────────────────────────────────────────────────────
 
 
 def _scored_index_mock(docs_with_scores: list[tuple[str, float]]):
@@ -189,7 +291,7 @@ async def test_score_threshold_drops_low_score_matches():
         patch("src.rag.retriever._openai") as mock_openai,
         patch("src.rag.retriever.pinecone_configured", return_value=True),
         patch("src.rag.retriever.get_pinecone_index", return_value=idx),
-        patch("src.rag.retriever.expand_query", new=AsyncMock(side_effect=lambda q: [q])),
+        patch("src.rag.retriever.expand_query", new=AsyncMock(side_effect=lambda q: (q, [q], []))),
         patch("src.rag.retriever.judge_chunks", new=AsyncMock(side_effect=lambda q, c, **kw: c)),
         patch("src.rag.retriever.compress_chunks", new=AsyncMock(side_effect=lambda q, c: c)),
     ):
@@ -207,7 +309,7 @@ async def test_score_threshold_accepts_match_exactly_at_threshold():
         patch("src.rag.retriever._openai") as mock_openai,
         patch("src.rag.retriever.pinecone_configured", return_value=True),
         patch("src.rag.retriever.get_pinecone_index", return_value=idx),
-        patch("src.rag.retriever.expand_query", new=AsyncMock(side_effect=lambda q: [q])),
+        patch("src.rag.retriever.expand_query", new=AsyncMock(side_effect=lambda q: (q, [q], []))),
         patch("src.rag.retriever.judge_chunks", new=AsyncMock(side_effect=lambda q, c, **kw: c)),
         patch("src.rag.retriever.compress_chunks", new=AsyncMock(side_effect=lambda q, c: c)),
     ):
@@ -229,7 +331,7 @@ async def test_score_threshold_treats_none_score_as_passing():
         patch("src.rag.retriever._openai") as mock_openai,
         patch("src.rag.retriever.pinecone_configured", return_value=True),
         patch("src.rag.retriever.get_pinecone_index", return_value=idx),
-        patch("src.rag.retriever.expand_query", new=AsyncMock(side_effect=lambda q: [q])),
+        patch("src.rag.retriever.expand_query", new=AsyncMock(side_effect=lambda q: (q, [q], []))),
         patch("src.rag.retriever.judge_chunks", new=AsyncMock(side_effect=lambda q, c, **kw: c)),
         patch("src.rag.retriever.compress_chunks", new=AsyncMock(side_effect=lambda q, c: c)),
     ):
@@ -246,7 +348,7 @@ async def test_score_threshold_drops_all_below_threshold_returns_empty():
         patch("src.rag.retriever._openai") as mock_openai,
         patch("src.rag.retriever.pinecone_configured", return_value=True),
         patch("src.rag.retriever.get_pinecone_index", return_value=idx),
-        patch("src.rag.retriever.expand_query", new=AsyncMock(side_effect=lambda q: [q])),
+        patch("src.rag.retriever.expand_query", new=AsyncMock(side_effect=lambda q: (q, [q], []))),
         patch("src.rag.retriever.judge_chunks", new=AsyncMock(side_effect=lambda q, c, **kw: c)),
         patch("src.rag.retriever.compress_chunks", new=AsyncMock(side_effect=lambda q, c: c)),
     ):
@@ -257,7 +359,7 @@ async def test_score_threshold_drops_all_below_threshold_returns_empty():
     assert result == []
 
 
-# ── 4. judge_chunks ───────────────────────────────────────────────────────────
+# ── 5. judge_chunks ───────────────────────────────────────────────────────────
 
 
 def _judge_mock(indices: list[int]):
@@ -350,7 +452,56 @@ async def test_judge_chunks_can_return_more_than_target_when_warranted():
     assert len(result) == 8
 
 
-# ── 5. compress_chunks ────────────────────────────────────────────────────────
+async def test_judge_prompt_includes_wrong_branch_of_law_guidance():
+    """System prompt must explicitly warn that criminal provisions are 0-4 in civil cases."""
+    chunks = ["A chunk."]
+    with patch("src.rag.reranker.instructor") as mock_instr:
+        mock_client = MagicMock()
+        mock_client.chat.completions.create = AsyncMock(
+            return_value=MagicMock(selected_indices=[0])
+        )
+        mock_instr.from_openai.return_value = mock_client
+        mock_instr.Mode.JSON = "json"
+        await judge_chunks("civil case", chunks)
+
+    system_content = mock_client.chat.completions.create.call_args.kwargs["messages"][0]["content"]
+    assert "criminal" in system_content.lower()
+    assert "0–4" in system_content or "0-4" in system_content
+
+
+async def test_judge_prompt_warns_against_surface_keyword_match():
+    """System prompt must instruct the judge to score on legal question, not shared words."""
+    chunks = ["A chunk."]
+    with patch("src.rag.reranker.instructor") as mock_instr:
+        mock_client = MagicMock()
+        mock_client.chat.completions.create = AsyncMock(
+            return_value=MagicMock(selected_indices=[0])
+        )
+        mock_instr.from_openai.return_value = mock_client
+        mock_instr.Mode.JSON = "json"
+        await judge_chunks("civil case", chunks)
+
+    system_content = mock_client.chat.completions.create.call_args.kwargs["messages"][0]["content"]
+    assert "keyword" in system_content.lower() or "surface" in system_content.lower()
+
+
+async def test_judge_prompt_mentions_citation_clause_as_boilerplate():
+    """System prompt must flag 'This Act may be cited as' as 0-4 boilerplate."""
+    chunks = ["A chunk."]
+    with patch("src.rag.reranker.instructor") as mock_instr:
+        mock_client = MagicMock()
+        mock_client.chat.completions.create = AsyncMock(
+            return_value=MagicMock(selected_indices=[0])
+        )
+        mock_instr.from_openai.return_value = mock_client
+        mock_instr.Mode.JSON = "json"
+        await judge_chunks("civil case", chunks)
+
+    system_content = mock_client.chat.completions.create.call_args.kwargs["messages"][0]["content"]
+    assert "cited as" in system_content.lower()
+
+
+# ── 6. compress_chunks ────────────────────────────────────────────────────────
 
 
 def _compress_mock(texts: list[str]):
@@ -371,14 +522,16 @@ async def test_compress_chunks_returns_compressed_text():
     assert result == compressed
 
 
-async def test_compress_chunks_drops_empty_compression_results():
+async def test_compress_chunks_falls_back_to_original_on_empty_compression():
+    # If the compressor returns "" for a judge-approved chunk, the original is
+    # kept rather than dropped — the judge is the gatekeeper, not the compressor.
     chunks = ["Relevant chunk.", "Irrelevant chunk — nothing useful here."]
     compressed = ["Relevant chunk.", ""]
     with patch("src.rag.reranker.instructor") as mock_instr:
         mock_instr.from_openai.return_value = _compress_mock(compressed)
         mock_instr.Mode.JSON = "json"
         result = await compress_chunks("case text", chunks)
-    assert result == ["Relevant chunk."]
+    assert result == ["Relevant chunk.", "Irrelevant chunk — nothing useful here."]
 
 
 async def test_compress_chunks_falls_back_to_original_on_individual_failure():
@@ -419,7 +572,7 @@ async def test_compress_chunks_empty_input_returns_empty():
     assert result == []
 
 
-# ── 6. rag_retrieve integration ───────────────────────────────────────────────
+# ── 7. rag_retrieve integration ───────────────────────────────────────────────
 
 
 def _index_mock_for_docs(texts: list[str], score: float = 0.85):
@@ -447,7 +600,7 @@ async def test_rag_retrieve_calls_judge_with_deduplicated_candidates():
         patch("src.rag.retriever._openai") as mock_openai,
         patch("src.rag.retriever.pinecone_configured", return_value=True),
         patch("src.rag.retriever.get_pinecone_index", return_value=idx),
-        patch("src.rag.retriever.expand_query", new=AsyncMock(side_effect=lambda q: [q])),
+        patch("src.rag.retriever.expand_query", new=AsyncMock(side_effect=lambda q: (q, [q], []))),
         patch("src.rag.retriever.judge_chunks", new=judge_spy),
         patch("src.rag.retriever.compress_chunks", new=AsyncMock(side_effect=lambda q, c: c)),
     ):
@@ -468,7 +621,7 @@ async def test_rag_retrieve_calls_compress_with_judge_output():
         patch("src.rag.retriever._openai") as mock_openai,
         patch("src.rag.retriever.pinecone_configured", return_value=True),
         patch("src.rag.retriever.get_pinecone_index", return_value=idx),
-        patch("src.rag.retriever.expand_query", new=AsyncMock(side_effect=lambda q: [q])),
+        patch("src.rag.retriever.expand_query", new=AsyncMock(side_effect=lambda q: (q, [q], []))),
         patch("src.rag.retriever.judge_chunks", new=AsyncMock(return_value=["Chunk A."])),
         patch("src.rag.retriever.compress_chunks", new=compress_spy),
     ):
@@ -488,7 +641,7 @@ async def test_rag_retrieve_final_result_is_compress_output():
         patch("src.rag.retriever._openai") as mock_openai,
         patch("src.rag.retriever.pinecone_configured", return_value=True),
         patch("src.rag.retriever.get_pinecone_index", return_value=idx),
-        patch("src.rag.retriever.expand_query", new=AsyncMock(side_effect=lambda q: [q])),
+        patch("src.rag.retriever.expand_query", new=AsyncMock(side_effect=lambda q: (q, [q], []))),
         patch("src.rag.retriever.judge_chunks", new=AsyncMock(side_effect=lambda q, c, **kw: c)),
         patch("src.rag.retriever.compress_chunks", new=AsyncMock(return_value=final)),
     ):
@@ -508,7 +661,7 @@ async def test_rag_retrieve_skips_judge_and_compress_when_no_candidates():
         patch("src.rag.retriever._openai") as mock_openai,
         patch("src.rag.retriever.pinecone_configured", return_value=True),
         patch("src.rag.retriever.get_pinecone_index", return_value=idx),
-        patch("src.rag.retriever.expand_query", new=AsyncMock(side_effect=lambda q: [q])),
+        patch("src.rag.retriever.expand_query", new=AsyncMock(side_effect=lambda q: (q, [q], []))),
         patch("src.rag.retriever.judge_chunks", new=judge_spy),
         patch("src.rag.retriever.compress_chunks", new=compress_spy),
     ):
@@ -529,7 +682,7 @@ async def test_rag_retrieve_applies_statute_filter_when_statute_detected():
         patch("src.rag.retriever._openai") as mock_openai,
         patch("src.rag.retriever.pinecone_configured", return_value=True),
         patch("src.rag.retriever.get_pinecone_index", return_value=idx),
-        patch("src.rag.retriever.expand_query", new=AsyncMock(side_effect=lambda q: [q])),
+        patch("src.rag.retriever.expand_query", new=AsyncMock(side_effect=lambda q: (q, [q], []))),
         patch("src.rag.retriever.judge_chunks", new=AsyncMock(side_effect=lambda q, c, **kw: c)),
         patch("src.rag.retriever.compress_chunks", new=AsyncMock(side_effect=lambda q, c: c)),
     ):
@@ -548,7 +701,7 @@ async def test_rag_retrieve_no_statute_filter_for_generic_query():
         patch("src.rag.retriever._openai") as mock_openai,
         patch("src.rag.retriever.pinecone_configured", return_value=True),
         patch("src.rag.retriever.get_pinecone_index", return_value=idx),
-        patch("src.rag.retriever.expand_query", new=AsyncMock(side_effect=lambda q: [q])),
+        patch("src.rag.retriever.expand_query", new=AsyncMock(side_effect=lambda q: (q, [q], []))),
         patch("src.rag.retriever.judge_chunks", new=AsyncMock(side_effect=lambda q, c, **kw: c)),
         patch("src.rag.retriever.compress_chunks", new=AsyncMock(side_effect=lambda q, c: c)),
     ):
@@ -557,3 +710,120 @@ async def test_rag_retrieve_no_statute_filter_for_generic_query():
 
     call_kwargs = idx.query.call_args.kwargs
     assert "filter" not in call_kwargs
+
+
+# ── 8. Guarantee queries ──────────────────────────────────────────────────────
+
+
+def test_guarantee_queries_wiba_entry_exists():
+    """WIBA file must have at least one guarantee query targeting the tort bar."""
+    assert "work_injury_benefits_act_cap236.txt" in _STATUTE_GUARANTEE_QUERIES
+    queries = _STATUTE_GUARANTEE_QUERIES["work_injury_benefits_act_cap236.txt"]
+    assert len(queries) >= 1
+    combined = " ".join(queries).lower()
+    assert any(kw in combined for kw in ("tort", "no action", "damages"))
+
+
+def test_guarantee_queries_not_defined_for_civil_procedure_act():
+    """Civil Procedure Act has no guarantee queries — its key provisions embed well."""
+    assert "civil_procedure_act_cap21.txt" not in _STATUTE_GUARANTEE_QUERIES
+
+
+def test_guarantee_queries_not_defined_for_land_act():
+    """Land Act has no guarantee queries — its key provisions embed well."""
+    assert "land_act_2012.txt" not in _STATUTE_GUARANTEE_QUERIES
+
+
+async def test_guarantee_query_fires_against_wiba_file_when_wiba_in_statutes():
+    """When WIBA is in applicable_statutes, the guarantee query must be sent to
+    Pinecone filtered to the WIBA source file, in addition to the supplemental search."""
+    idx = _index_mock_for_docs(["WIBA chunk."])
+    wiba_filter = {"source": {"$in": ["work_injury_benefits_act_cap236.txt"]}}
+
+    with (
+        patch("src.rag.retriever._openai") as mock_openai,
+        patch("src.rag.retriever.pinecone_configured", return_value=True),
+        patch("src.rag.retriever.get_pinecone_index", return_value=idx),
+        patch(
+            "src.rag.retriever.expand_query",
+            new=AsyncMock(return_value=(
+                "employee injured workplace",
+                ["employee injured at workplace PPE not provided Kenya"],
+                ["Work Injury Benefits Act Cap 236"],
+            )),
+        ),
+        patch("src.rag.retriever.judge_chunks", new=AsyncMock(side_effect=lambda q, c, **kw: c)),
+        patch("src.rag.retriever.compress_chunks", new=AsyncMock(side_effect=lambda q, c: c)),
+    ):
+        mock_openai.embeddings.create = _embed_mock()
+        await rag_retrieve("employee fell at construction site and was injured")
+
+    all_filters = [call.kwargs.get("filter") for call in idx.query.call_args_list]
+    assert wiba_filter in all_filters, (
+        f"Expected a Pinecone call filtered to WIBA file. Actual filters: {all_filters}"
+    )
+
+
+async def test_guarantee_query_fires_in_addition_to_supplemental_search():
+    """When WIBA is applicable, both the rag_context supplemental search AND the
+    guarantee query search must run — they serve different retrieval purposes."""
+    idx = _index_mock_for_docs(["WIBA chunk."])
+    wiba_filter = {"source": {"$in": ["work_injury_benefits_act_cap236.txt"]}}
+
+    with (
+        patch("src.rag.retriever._openai") as mock_openai,
+        patch("src.rag.retriever.pinecone_configured", return_value=True),
+        patch("src.rag.retriever.get_pinecone_index", return_value=idx),
+        patch(
+            "src.rag.retriever.expand_query",
+            new=AsyncMock(return_value=(
+                "employee injured workplace",
+                ["employee injured at workplace Kenya"],
+                ["Work Injury Benefits Act Cap 236"],
+            )),
+        ),
+        patch("src.rag.retriever.judge_chunks", new=AsyncMock(side_effect=lambda q, c, **kw: c)),
+        patch("src.rag.retriever.compress_chunks", new=AsyncMock(side_effect=lambda q, c: c)),
+    ):
+        mock_openai.embeddings.create = _embed_mock()
+        await rag_retrieve("employee fell and was injured at work")
+
+    # Count how many Pinecone calls used the WIBA filter
+    wiba_calls = [
+        call for call in idx.query.call_args_list
+        if call.kwargs.get("filter") == wiba_filter
+    ]
+    # 1 supplemental (rag_context) + 1 guarantee query = at least 2 WIBA-filtered calls
+    assert len(wiba_calls) >= 2, (
+        f"Expected at least 2 WIBA-filtered calls (supplemental + guarantee). "
+        f"Got {len(wiba_calls)}. All filters: {[c.kwargs.get('filter') for c in idx.query.call_args_list]}"
+    )
+
+
+async def test_guarantee_query_does_not_fire_when_statute_not_in_applicable_statutes():
+    """Guarantee queries must not run when WIBA is not in expand_query's applicable_statutes."""
+    idx = _index_mock_for_docs(["Land chunk."])
+    wiba_filter = {"source": {"$in": ["work_injury_benefits_act_cap236.txt"]}}
+
+    with (
+        patch("src.rag.retriever._openai") as mock_openai,
+        patch("src.rag.retriever.pinecone_configured", return_value=True),
+        patch("src.rag.retriever.get_pinecone_index", return_value=idx),
+        patch(
+            "src.rag.retriever.expand_query",
+            new=AsyncMock(return_value=(
+                "land dispute context",
+                ["specific performance Land Act Kenya"],
+                ["Land Act 2012"],
+            )),
+        ),
+        patch("src.rag.retriever.judge_chunks", new=AsyncMock(side_effect=lambda q, c, **kw: c)),
+        patch("src.rag.retriever.compress_chunks", new=AsyncMock(side_effect=lambda q, c: c)),
+    ):
+        mock_openai.embeddings.create = _embed_mock()
+        await rag_retrieve("land sale agreement specific performance")
+
+    all_filters = [call.kwargs.get("filter") for call in idx.query.call_args_list]
+    assert wiba_filter not in all_filters, (
+        f"WIBA guarantee query must not fire for a land dispute. Filters: {all_filters}"
+    )

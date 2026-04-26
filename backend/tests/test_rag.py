@@ -42,13 +42,16 @@ def test_chunk_text_short_text_returns_single_chunk():
 
 
 def test_chunk_text_long_text_produces_multiple_chunks():
-    text = "A" * (CHUNK_SIZE + 50)
+    # Enough sentences to exceed CHUNK_SIZE → must split into multiple chunks
+    text = "This is a short legal sentence. " * 50  # ~1600 chars, > 800
     result = chunk_text(text, size=CHUNK_SIZE, overlap=CHUNK_OVERLAP)
     assert len(result) > 1
 
 
 def test_chunk_text_no_chunk_exceeds_size():
-    text = "word " * 400
+    # Short sentences (< CHUNK_SIZE each) → no chunk should exceed CHUNK_SIZE
+    sentence = "This is a typical sentence in a legal document. "
+    text = sentence * 40
     for chunk in chunk_text(text, size=CHUNK_SIZE, overlap=CHUNK_OVERLAP):
         assert len(chunk) <= CHUNK_SIZE
 
@@ -59,22 +62,31 @@ def test_chunk_text_all_chunks_non_empty():
 
 
 def test_chunk_text_exactly_chunk_size_returns_one_chunk():
+    # No sentence boundaries → treated as one sentence → one chunk regardless of size
     text = "x" * CHUNK_SIZE
     assert len(chunk_text(text, size=CHUNK_SIZE, overlap=0)) == 1
 
 
 def test_chunk_text_zero_overlap_produces_non_overlapping_chunks():
-    text = "x" * 300
+    # With overlap=0, sentences from one chunk must not appear in the next
+    sentences = [f"Sentence number {i} ends here." for i in range(20)]
+    text = " ".join(sentences)
     result = chunk_text(text, size=100, overlap=0)
-    assert len(result) == 3
-
-
-def test_chunk_text_overlap_tail_of_first_matches_head_of_second():
-    # With overlap=20, the last 20 chars of chunk[0] should equal the first 20 of chunk[1].
-    text = "ABCDE" * 200  # 1000 chars
-    result = chunk_text(text, size=100, overlap=20)
     assert len(result) >= 2
-    assert result[0][-20:] == result[1][:20]
+    # No sentence from chunk[0] should appear in chunk[1]
+    for sentence in result[0].split(". "):
+        assert sentence not in result[1]
+
+
+def test_chunk_text_overlap_sentences_appear_in_consecutive_chunks():
+    # With overlap, sentences near the boundary of chunk[0] must reappear in chunk[1]
+    sentences = [f"Sentence {i} about legal matters in Kenya." for i in range(20)]
+    text = " ".join(sentences)
+    result = chunk_text(text, size=200, overlap=80)
+    assert len(result) >= 2
+    # The last sentence of chunk[0] must appear somewhere in chunk[1]
+    last_sentence_of_first = result[0].split(". ")[-1].strip(" .")
+    assert last_sentence_of_first in result[1]
 
 
 def test_chunk_text_strips_leading_trailing_whitespace_from_each_chunk():
@@ -122,7 +134,7 @@ async def test_rag_retrieve_returns_list_of_strings():
         patch("src.rag.retriever._openai") as mock_openai,
         patch("src.rag.retriever.pinecone_configured", return_value=True),
         patch("src.rag.retriever.get_pinecone_index", return_value=idx),
-        patch("src.rag.retriever.expand_query", new=AsyncMock(side_effect=lambda q: [q])),
+        patch("src.rag.retriever.expand_query", new=AsyncMock(side_effect=lambda q: (q, [q], []))),
         patch("src.rag.retriever.judge_chunks", new=AsyncMock(side_effect=lambda q, c, **kw: c)),
         patch("src.rag.retriever.compress_chunks", new=AsyncMock(side_effect=lambda q, c: c)),
     ):
@@ -139,7 +151,7 @@ async def test_rag_retrieve_returns_correct_chunk_content():
         patch("src.rag.retriever._openai") as mock_openai,
         patch("src.rag.retriever.pinecone_configured", return_value=True),
         patch("src.rag.retriever.get_pinecone_index", return_value=idx),
-        patch("src.rag.retriever.expand_query", new=AsyncMock(side_effect=lambda q: [q])),
+        patch("src.rag.retriever.expand_query", new=AsyncMock(side_effect=lambda q: (q, [q], []))),
         patch("src.rag.retriever.judge_chunks", new=AsyncMock(side_effect=lambda q, c, **kw: c)),
         patch("src.rag.retriever.compress_chunks", new=AsyncMock(side_effect=lambda q, c: c)),
     ):
@@ -155,7 +167,7 @@ async def test_rag_retrieve_empty_index_returns_empty_list():
         patch("src.rag.retriever._openai") as mock_openai,
         patch("src.rag.retriever.pinecone_configured", return_value=True),
         patch("src.rag.retriever.get_pinecone_index", return_value=idx),
-        patch("src.rag.retriever.expand_query", new=AsyncMock(side_effect=lambda q: [q])),
+        patch("src.rag.retriever.expand_query", new=AsyncMock(side_effect=lambda q: (q, [q], []))),
     ):
         mock_openai.embeddings.create = _embed_mock()
         result = await rag_retrieve("anything")
@@ -184,7 +196,7 @@ async def test_rag_retrieve_passes_correct_embedding_to_pinecone():
         patch("src.rag.retriever._openai") as mock_openai,
         patch("src.rag.retriever.pinecone_configured", return_value=True),
         patch("src.rag.retriever.get_pinecone_index", return_value=idx),
-        patch("src.rag.retriever.expand_query", new=AsyncMock(side_effect=lambda q: [q])),
+        patch("src.rag.retriever.expand_query", new=AsyncMock(side_effect=lambda q: (q, [q], []))),
         patch("src.rag.retriever.judge_chunks", new=AsyncMock(side_effect=lambda q, c, **kw: c)),
         patch("src.rag.retriever.compress_chunks", new=AsyncMock(side_effect=lambda q, c: c)),
     ):
@@ -200,7 +212,7 @@ async def test_rag_retrieve_respects_n_results_argument():
         patch("src.rag.retriever._openai") as mock_openai,
         patch("src.rag.retriever.pinecone_configured", return_value=True),
         patch("src.rag.retriever.get_pinecone_index", return_value=idx),
-        patch("src.rag.retriever.expand_query", new=AsyncMock(side_effect=lambda q: [q])),
+        patch("src.rag.retriever.expand_query", new=AsyncMock(side_effect=lambda q: (q, [q], []))),
         patch("src.rag.retriever.judge_chunks", new=AsyncMock(side_effect=lambda q, c, **kw: c)),
         patch("src.rag.retriever.compress_chunks", new=AsyncMock(side_effect=lambda q, c: c)),
     ):
@@ -216,7 +228,7 @@ async def test_rag_retrieve_passes_requested_top_k_to_pinecone():
         patch("src.rag.retriever._openai") as mock_openai,
         patch("src.rag.retriever.pinecone_configured", return_value=True),
         patch("src.rag.retriever.get_pinecone_index", return_value=idx),
-        patch("src.rag.retriever.expand_query", new=AsyncMock(side_effect=lambda q: [q])),
+        patch("src.rag.retriever.expand_query", new=AsyncMock(side_effect=lambda q: (q, [q], []))),
         patch("src.rag.retriever.judge_chunks", new=AsyncMock(side_effect=lambda q, c, **kw: c)),
         patch("src.rag.retriever.compress_chunks", new=AsyncMock(side_effect=lambda q, c: c)),
     ):
@@ -239,7 +251,7 @@ async def test_rag_retrieve_filters_out_empty_document_strings():
         patch("src.rag.retriever._openai") as mock_openai,
         patch("src.rag.retriever.pinecone_configured", return_value=True),
         patch("src.rag.retriever.get_pinecone_index", return_value=idx),
-        patch("src.rag.retriever.expand_query", new=AsyncMock(side_effect=lambda q: [q])),
+        patch("src.rag.retriever.expand_query", new=AsyncMock(side_effect=lambda q: (q, [q], []))),
         patch("src.rag.retriever.judge_chunks", new=AsyncMock(side_effect=lambda q, c, **kw: c)),
         patch("src.rag.retriever.compress_chunks", new=AsyncMock(side_effect=lambda q, c: c)),
     ):
@@ -256,7 +268,7 @@ async def test_rag_retrieve_sets_include_metadata_true():
         patch("src.rag.retriever._openai") as mock_openai,
         patch("src.rag.retriever.pinecone_configured", return_value=True),
         patch("src.rag.retriever.get_pinecone_index", return_value=idx),
-        patch("src.rag.retriever.expand_query", new=AsyncMock(side_effect=lambda q: [q])),
+        patch("src.rag.retriever.expand_query", new=AsyncMock(side_effect=lambda q: (q, [q], []))),
         patch("src.rag.retriever.judge_chunks", new=AsyncMock(side_effect=lambda q, c, **kw: c)),
         patch("src.rag.retriever.compress_chunks", new=AsyncMock(side_effect=lambda q, c: c)),
     ):
@@ -562,21 +574,26 @@ async def test_rag_step_index_is_1(client, mock_agents):
 
 
 def _instructor_mock(queries: list[str]):
-    """Return a mock instructor client whose create() resolves to the given queries."""
+    """Return a mock instructor client whose create() resolves to a _CaseSummary."""
     mock_result = MagicMock()
     mock_result.queries = queries
+    mock_result.legal_issues = ["test legal issue"]
+    mock_result.applicable_statutes = ["Test Act"]
+    mock_result.key_facts = ["test key fact"]
     mock_client = MagicMock()
     mock_client.chat.completions.create = AsyncMock(return_value=mock_result)
     return mock_client
 
 
-async def test_expand_query_returns_list_of_strings():
+async def test_expand_query_returns_tuple_of_context_and_queries():
     with patch("src.rag.query_expansion.instructor") as mock_instr:
         mock_instr.from_openai.return_value = _instructor_mock(["query A", "query B"])
         mock_instr.Mode.JSON = "json"
-        result = await expand_query("plaintiff failed to pay rent")
-    assert isinstance(result, list)
-    assert all(isinstance(q, str) for q in result)
+        context, queries, statutes = await expand_query("plaintiff failed to pay rent")
+    assert isinstance(context, str)
+    assert isinstance(queries, list)
+    assert all(isinstance(q, str) for q in queries)
+    assert isinstance(statutes, list)
 
 
 async def test_expand_query_returns_n_queries_from_llm():
@@ -584,8 +601,8 @@ async def test_expand_query_returns_n_queries_from_llm():
     with patch("src.rag.query_expansion.instructor") as mock_instr:
         mock_instr.from_openai.return_value = _instructor_mock(expected)
         mock_instr.Mode.JSON = "json"
-        result = await expand_query("tenant refused to vacate after lease expired")
-    assert result == expected
+        _, queries, _statutes = await expand_query("tenant refused to vacate after lease expired")
+    assert queries == expected
 
 
 async def test_expand_query_strips_whitespace_from_each_query():
@@ -593,8 +610,8 @@ async def test_expand_query_strips_whitespace_from_each_query():
     with patch("src.rag.query_expansion.instructor") as mock_instr:
         mock_instr.from_openai.return_value = _instructor_mock(raw)
         mock_instr.Mode.JSON = "json"
-        result = await expand_query("accident on construction site")
-    assert result == [q.strip() for q in raw]
+        _, queries, _statutes = await expand_query("accident on construction site")
+    assert queries == [q.strip() for q in raw]
 
 
 async def test_expand_query_filters_blank_entries_from_llm():
@@ -602,11 +619,11 @@ async def test_expand_query_filters_blank_entries_from_llm():
     with patch("src.rag.query_expansion.instructor") as mock_instr:
         mock_instr.from_openai.return_value = _instructor_mock(raw)
         mock_instr.Mode.JSON = "json"
-        result = await expand_query("some case text")
-    assert result == ["valid query", "another valid query"]
+        _, queries, _statutes = await expand_query("some case text")
+    assert queries == ["valid query", "another valid query"]
 
 
-async def test_expand_query_falls_back_to_original_text_on_llm_error():
+async def test_expand_query_falls_back_to_heuristic_on_llm_error():
     with patch("src.rag.query_expansion.instructor") as mock_instr:
         mock_instr.from_openai.return_value = MagicMock(
             chat=MagicMock(
@@ -617,31 +634,59 @@ async def test_expand_query_falls_back_to_original_text_on_llm_error():
         )
         mock_instr.Mode.JSON = "json"
         original = "contract dispute over land sale"
-        result = await expand_query(original)
-    assert result == [original]
+        context, queries, statutes = await expand_query(original)
+    assert isinstance(context, str) and len(context) > 0
+    assert len(queries) == 1 and len(queries[0]) > 0
+    assert statutes == []
 
 
 async def test_expand_query_falls_back_when_all_queries_blank():
     with patch("src.rag.query_expansion.instructor") as mock_instr:
         mock_instr.from_openai.return_value = _instructor_mock(["", "   "])
         mock_instr.Mode.JSON = "json"
-        original = "some case text"
-        result = await expand_query(original)
-    assert result == [original]
+        _, queries, _statutes = await expand_query("some case text")
+    assert len(queries) == 1 and len(queries[0]) > 0
 
 
 async def test_expand_query_empty_string_returns_without_llm_call():
     with patch("src.rag.query_expansion.instructor") as mock_instr:
-        result = await expand_query("")
+        context, queries, statutes = await expand_query("")
     mock_instr.from_openai.assert_not_called()
-    assert result == [""]
+    assert context == "" and queries == [""] and statutes == []
 
 
 async def test_expand_query_whitespace_only_returns_without_llm_call():
     with patch("src.rag.query_expansion.instructor") as mock_instr:
-        result = await expand_query("   ")
+        context, queries, statutes = await expand_query("   ")
     mock_instr.from_openai.assert_not_called()
-    assert result == ["   "]
+    assert context == "   " and queries == ["   "] and statutes == []
+
+
+async def test_expand_query_context_contains_legal_issues():
+    """The context string must include the legal issues from the structured summary."""
+    with patch("src.rag.query_expansion.instructor") as mock_instr:
+        mock_instr.from_openai.return_value = _instructor_mock(["written contract requirement"])
+        mock_instr.Mode.JSON = "json"
+        context, _, statutes = await expand_query("breach of written agreement")
+    assert "test legal issue" in context
+    assert "Test Act" in context
+    assert "Test Act" in statutes
+
+
+async def test_expand_query_fallback_selects_legal_sentences():
+    """Fallback context must prefer sentences with legal terminology."""
+    irrelevant = "The weather was fine. John lives in Nairobi."
+    legal = "The contract was breached under section 3 of the Act."
+    text = f"{irrelevant} {legal}"
+    with patch("src.rag.query_expansion.instructor") as mock_instr:
+        mock_instr.from_openai.return_value = MagicMock(
+            chat=MagicMock(
+                completions=MagicMock(create=AsyncMock(side_effect=Exception("fail")))
+            )
+        )
+        mock_instr.Mode.JSON = "json"
+        context, _, _statutes = await expand_query(text)
+    assert "contract" in context.lower() or "section" in context.lower()
 
 
 # ── 4. rag_retrieve multi-query / deduplication (Feature 2) ──────────────────
@@ -655,7 +700,7 @@ async def test_rag_retrieve_calls_pinecone_once_per_expanded_query():
         patch("src.rag.retriever._openai") as mock_openai,
         patch("src.rag.retriever.pinecone_configured", return_value=True),
         patch("src.rag.retriever.get_pinecone_index", return_value=idx),
-        patch("src.rag.retriever.expand_query", new=AsyncMock(return_value=["q1", "q2", "q3"])),
+        patch("src.rag.retriever.expand_query", new=AsyncMock(return_value=("ctx", ["q1", "q2", "q3"], []))),
         patch("src.rag.retriever.judge_chunks", new=AsyncMock(side_effect=lambda q, c, **kw: c)),
         patch("src.rag.retriever.compress_chunks", new=AsyncMock(side_effect=lambda q, c: c)),
     ):
@@ -672,7 +717,7 @@ async def test_rag_retrieve_deduplicates_identical_chunks_across_queries():
         patch("src.rag.retriever._openai") as mock_openai,
         patch("src.rag.retriever.pinecone_configured", return_value=True),
         patch("src.rag.retriever.get_pinecone_index", return_value=idx),
-        patch("src.rag.retriever.expand_query", new=AsyncMock(return_value=["q1", "q2", "q3"])),
+        patch("src.rag.retriever.expand_query", new=AsyncMock(return_value=("ctx", ["q1", "q2", "q3"], []))),
         patch("src.rag.retriever.judge_chunks", new=AsyncMock(side_effect=lambda q, c, **kw: c)),
         patch("src.rag.retriever.compress_chunks", new=AsyncMock(side_effect=lambda q, c: c)),
     ):
@@ -693,7 +738,7 @@ async def test_rag_retrieve_union_of_unique_chunks_across_queries():
         patch("src.rag.retriever._openai") as mock_openai,
         patch("src.rag.retriever.pinecone_configured", return_value=True),
         patch("src.rag.retriever.get_pinecone_index", side_effect=call_seq),
-        patch("src.rag.retriever.expand_query", new=AsyncMock(return_value=["q1", "q2", "q3"])),
+        patch("src.rag.retriever.expand_query", new=AsyncMock(return_value=("ctx", ["q1", "q2", "q3"], []))),
         patch("src.rag.retriever.judge_chunks", new=AsyncMock(side_effect=lambda q, c, **kw: c)),
         patch("src.rag.retriever.compress_chunks", new=AsyncMock(side_effect=lambda q, c: c)),
     ):
@@ -709,7 +754,7 @@ async def test_rag_retrieve_preserves_first_occurrence_order_on_dedup():
         patch("src.rag.retriever._openai") as mock_openai,
         patch("src.rag.retriever.pinecone_configured", return_value=True),
         patch("src.rag.retriever.get_pinecone_index", return_value=idx),
-        patch("src.rag.retriever.expand_query", new=AsyncMock(return_value=["q1", "q2"])),
+        patch("src.rag.retriever.expand_query", new=AsyncMock(return_value=("ctx", ["q1", "q2"], []))),
         patch("src.rag.retriever.judge_chunks", new=AsyncMock(side_effect=lambda q, c, **kw: c)),
         patch("src.rag.retriever.compress_chunks", new=AsyncMock(side_effect=lambda q, c: c)),
     ):
@@ -730,7 +775,7 @@ async def test_rag_retrieve_continues_when_one_expanded_query_fails():
         patch("src.rag.retriever._openai") as mock_openai,
         patch("src.rag.retriever.pinecone_configured", return_value=True),
         patch("src.rag.retriever.get_pinecone_index", side_effect=call_seq),
-        patch("src.rag.retriever.expand_query", new=AsyncMock(return_value=["q1", "q2"])),
+        patch("src.rag.retriever.expand_query", new=AsyncMock(return_value=("ctx", ["q1", "q2"], []))),
         patch("src.rag.retriever.judge_chunks", new=AsyncMock(side_effect=lambda q, c, **kw: c)),
         patch("src.rag.retriever.compress_chunks", new=AsyncMock(side_effect=lambda q, c: c)),
     ):
