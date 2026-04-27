@@ -43,7 +43,7 @@ uv run uvicorn src.main:app --reload --host 127.0.0.1 --port 8000
 ## Tests & lint (match CI)
 
 ```bash
-uv run pytest tests/ -q          # 143 tests
+uv run pytest tests/ -q          # 242 tests (see CI)
 uv run ruff check src tests
 uv run ruff format --check src tests
 uv run mypy src --ignore-missing-imports
@@ -56,7 +56,7 @@ Root `main.py` is a one-line **Uvicorn entry** (`uvicorn main:app`); Ruff allows
 
 ## Golden-case evals & GitHub Actions
 
-**GitHub Actions (`evals.yml`):** On path-filtered pushes to **`main`**, **`eval_extraction`** runs against every row in **`backend/evals/golden_cases.json`** (**11** golden cases). The **`extraction-eval`** job uses **`continue-on-error: true`**, so the workflow does not block merges when the eval fails or **`OPENAI_API_KEY`** is missing—use the job log for pass/fail. To block merges on golden-case regression, add **`OPENAI_API_KEY`** as a repo secret and remove **`continue-on-error`**. **`eval_llm_judge`** runs only via **Actions → Evaluations → Run workflow** with the optional checkbox (~**$0.30+** per full run). See **`docs/PROJECT_WALKTHROUGH.md`** §22 for tables and rubric mapping.
+**GitHub Actions (`evals.yml`):** On path-filtered pushes to **`main`**, **`eval_extraction`** runs against every row in **`backend/evals/golden_cases.json`**. The **`extraction-eval`** job uses **`continue-on-error: true`**, so the workflow does not block merges when the eval fails or **`OPENAI_API_KEY`** is missing—use the job log for pass/fail. To block merges on golden-case regression, add **`OPENAI_API_KEY`** as a repo secret and remove **`continue-on-error`**. **`eval_llm_judge`** runs only via **Actions → Evaluations → Run workflow** with the optional checkbox (~**$0.30+** per full run). See [../docs/DEVELOPMENT.md](../docs/DEVELOPMENT.md).
 
 ```bash
 cd backend
@@ -81,9 +81,9 @@ uv run python -m evals.eval_llm_judge   # local only unless you dispatch the wor
 | `src/database/` | Async engine, `get_db`, models |
 | `src/schemas/` | API + AI Pydantic models |
 | `evals/` | **`golden_cases.json`** + **`eval_extraction`** / **`eval_llm_judge`** (see **Golden-case evals & GitHub Actions** above) |
-| `tests/` | Pytest async suite (143 tests) |
+| `tests/` | Pytest async suite (coverage-gated in CI) |
 
-Longer API and SSE details: **[`docs/backend.md`](../docs/backend.md)**. Full narrative: **[`docs/PROJECT_WALKTHROUGH.md`](../docs/PROJECT_WALKTHROUGH.md)**.
+API and SSE: **[`../docs/API.md`](../docs/API.md)**. RAG: **[`../docs/RAG.md`](../docs/RAG.md)**. System overview: **[`../docs/ARCHITECTURE.md`](../docs/ARCHITECTURE.md)**.
 
 ---
 

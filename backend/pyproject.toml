@@ -34,6 +34,8 @@ dev = [
   "anyio>=4.0.0",
   "ruff>=0.4.0",
   "mypy>=1.10.0",
+  "python-pptx>=1.0.0",
+  "lxml>=5.0.0",
 ]
 
 [tool.pytest.ini_options]
