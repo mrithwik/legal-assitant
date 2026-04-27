@@ -1,6 +1,6 @@
 # Frontend (Next.js)
 
-Next.js **App Router** application for the Litigation Prep Assistant: landing, pricing, auth entry, and dashboard flows for case input, history, and per-case results. This tree is a **scaffold**; Clerk, billing, and API integration are placeholders.
+Next.js **App Router** application for the Litigation Prep Assistant: landing, pricing, auth entry, and dashboard flows for case input, **SSE** streaming of the analysis, history, and per-case detail. It integrates with **Clerk** and the FastAPI backend documented under [`../docs/`](../docs/README.md).
 
 ## Requirements
 
@@ -26,15 +26,17 @@ npm install
 
 Default dev URL: `http://localhost:3000`.
 
-**Evals / CI (backend repo):** Golden-case extraction runs in **`.github/workflows/evals.yml`** on path-filtered pushes to **`main`** (**`continue-on-error: true`** until **`OPENAI_API_KEY`** is set and you remove it); the expensive LLM-judge job is **manual** only — see **`../docs/PROJECT_WALKTHROUGH.md`** §22 (this Next.js app is unchanged by those jobs).
+**Evals (backend only):** Golden-case extraction is configured in **`../.github/workflows/evals.yml`**. The expensive LLM-judge job is **manual**; see [`../docs/DEVELOPMENT.md`](../docs/DEVELOPMENT.md).
 
 ## Environment variables
 
 | Variable | Purpose |
 |----------|---------|
-| `NEXT_PUBLIC_API_URL` | Base URL of the FastAPI backend. Defaults to `http://127.0.0.1:8000` in `src/lib/api.ts` when unset. |
+| `NEXT_PUBLIC_API_URL` | Base URL of the FastAPI backend (e.g. `http://127.0.0.1:8000` locally) |
+| `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY` | Clerk **publishable** key (safe in the browser) |
+| `CLERK_SECRET_KEY` | Clerk **secret** — server only; never commit to git |
 
-Create a local env file if you need overrides (for example `.env.local` — keep secrets out of git). See [Next.js Environment Variables](https://nextjs.org/docs/app/building-your-application/configuring/environment-variables).
+Create `.env.local` from **`frontend/.env.example`**. See [Next.js environment variables](https://nextjs.org/docs/app/building-your-application/configuring/environment-variables).
 
 ## App Router routes (scaffold)
 
@@ -50,9 +52,9 @@ Create a local env file if you need overrides (for example `.env.local` — keep
 
 `src/proxy.ts` (Clerk middleware) controls auth at the edge; `/dashboard/*` is also gated in `dashboard/layout.tsx`.
 
-## Components (stubs)
+## Components
 
-Under `src/components/`: domain folders for `forms`, `dashboard`, `agents`, and `ui` provide minimal placeholders for upcoming UI work.
+`src/components/` is organized by domain: `forms`, `dashboard`, `agents`, and `ui` (primitives). Key streaming UI: `pipeline-markdown-panel.tsx` (SSE), case intake: `forms/case-input-form.tsx`.
 
 ## Deploying on AWS App Runner
 

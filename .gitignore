@@ -32,11 +32,14 @@ data/vector_db/*
 
 # Documentation
 Backend_walkthrough.md
-#PROJECT_WALKTHROUGH.md
+PROJECT_WALKTHROUGH.md
 DEPLOYMENT_TUTORIAL.md
+rag_enrichments_evals_guide.md
+rag_integration_guide.md
 Rubric.md
 docs/archive/*
 docs/tutorials/*
+docs/capstone/*
 
 # Database
 backend/*.db
@@ -54,3 +57,5 @@ terraform.tfstate.d/
 backend/*.coverage
 
 .DS_Store
+
+# Files
